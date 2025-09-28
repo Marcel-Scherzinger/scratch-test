@@ -1,0 +1,23 @@
+[package]
+name = "scratch-test"
+version = "0.1.0"
+edition = "2024"
+default-run = "scratch-test"
+
+[workspace.dependencies]
+thiserror = "2.0.16"
+
+[dependencies]
+derive_more = { version = "2.0.1", features = ["display", "from"] }
+serde_json = "1.0.145"
+thiserror = "2.0.16"
+zip = "5.1.1"
+log = "0.4.28"
+
+model = { path = "crates/model" }
+clap = { version = "4.5.48", features = ["derive"] }
+dotenvy = "0.15.7"
+env_logger = "0.11.8"
+
+[workspace]
+members = ["crates/model"]
