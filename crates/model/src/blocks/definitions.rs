@@ -3,9 +3,7 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum BlockKind {
-    EventWhenflagclicked,
-    // SensingDayssince2000,
+pub enum StmtBlockKind {
     DataSetvariableto {
         variable_to_set: Variable,
         value: Expression,
@@ -24,87 +22,6 @@ pub enum BlockKind {
     LooksSay {
         message: Expression,
     },
-    OperatorLength {
-        string: Expression,
-    },
-    OperatorJoin {
-        string1: Expression,
-        string2: Expression,
-    },
-    OperatorAdd {
-        num1: Expression,
-        num2: Expression,
-    },
-    OperatorMultiply {
-        num1: Expression,
-        num2: Expression,
-    },
-    OperatorMod {
-        num1: Expression,
-        num2: Expression,
-    },
-    OperatorSubtract {
-        num1: Expression,
-        num2: Expression,
-    },
-    OperatorDivide {
-        num1: Expression,
-        num2: Expression,
-    },
-    OperatorAnd {
-        operand1: Expression,
-        operand2: Expression,
-    },
-    OperatorOr {
-        operand1: Expression,
-        operand2: Expression,
-    },
-    OperatorEquals {
-        operand1: Expression,
-        operand2: Expression,
-    },
-    OperatorGt {
-        operand1: Expression,
-        operand2: Expression,
-    },
-    OperatorLt {
-        operand1: Expression,
-        operand2: Expression,
-    },
-    OperatorContains {
-        string1: Expression,
-        string2: Expression,
-    },
-    OperatorNot {
-        operand: Expression,
-    },
-    ControlRepeatuntil {
-        condition: Option<RefBlock>,
-        substack: Option<RefBlock>,
-    },
-    OperatorMathop {
-        operator: DropdownSelection,
-        num: Expression,
-    },
-    OperatorLetterOf {
-        letter: Expression,
-        string: Expression,
-    },
-    OperatorRound {
-        num: Expression,
-    },
-    /* OperatorRandom {
-        from: Expression,
-        to: Expression,
-    }, */
-    SensingCurrent {
-        currentmenu: DropdownSelection,
-    },
-    SensingAskandwait {
-        question: Expression,
-    },
-    SensingTimer,
-    SensingAnswer,
     ControlWait {
         duration: Expression,
     },
@@ -143,17 +60,74 @@ pub enum BlockKind {
         index: Expression,
         item: Expression,
     },
-    DataListcontainsitem {
-        list: List,
-        item: Expression,
+    ControlRepeatuntil {
+        condition: Option<RefBlock>,
+        substack: Option<RefBlock>,
     },
-    DataLengthoflist {
-        list: List,
+
+    SensingAskandwait {
+        question: Expression,
     },
     DataAddtolist {
         list: List,
         item: Expression,
     },
+}
+#[derive(Debug)]
+pub enum ExprBlockKind {
+    ArgumentReporterStringNumber {
+        value: ArgumentReporterName,
+    },
+    ArgumentReporterBoolean {
+        value: ArgumentReporterName,
+    },
+    OperatorLength {
+        string: Expression,
+    },
+    OperatorJoin {
+        string1: Expression,
+        string2: Expression,
+    },
+    OperatorAdd {
+        num1: Expression,
+        num2: Expression,
+    },
+    OperatorMultiply {
+        num1: Expression,
+        num2: Expression,
+    },
+    OperatorMod {
+        num1: Expression,
+        num2: Expression,
+    },
+    OperatorSubtract {
+        num1: Expression,
+        num2: Expression,
+    },
+    OperatorDivide {
+        num1: Expression,
+        num2: Expression,
+    },
+    OperatorMathop {
+        operator: DropdownSelection,
+        num: Expression,
+    },
+    OperatorLetterOf {
+        letter: Expression,
+        string: Expression,
+    },
+    OperatorRound {
+        num: Expression,
+    },
+    /* OperatorRandom {
+        from: Expression,
+        to: Expression,
+    }, */
+    /*SensingCurrent {
+        currentmenu: DropdownSelection,
+    },*/
+    // SensingTimer,
+    SensingAnswer,
     DataItemnumoflist {
         list: List,
         item: Expression,
@@ -164,12 +138,54 @@ pub enum BlockKind {
     RDataVar {
         variable: Variable,
     },
-    ArgumentReporterStringNumber {
-        value: ArgumentReporterName,
+
+    DataLengthoflist {
+        list: List,
     },
-    ArgumentReporterBoolean {
-        value: ArgumentReporterName,
+    // SensingDayssince2000,
+}
+#[derive(Debug)]
+pub enum CmpBlockKind {
+    OperatorAnd {
+        operand1: RefBlock,
+        operand2: RefBlock,
     },
+    OperatorOr {
+        operand1: RefBlock,
+        operand2: RefBlock,
+    },
+    OperatorEquals {
+        operand1: Expression,
+        operand2: Expression,
+    },
+    OperatorGt {
+        operand1: Expression,
+        operand2: Expression,
+    },
+    OperatorLt {
+        operand1: Expression,
+        operand2: Expression,
+    },
+    OperatorContains {
+        string1: Expression,
+        string2: Expression,
+    },
+    OperatorNot {
+        operand: RefBlock,
+    },
+
+    DataListcontainsitem {
+        list: List,
+        item: Expression,
+    },
+}
+
+#[derive(Debug, derive_more::From)]
+pub enum BlockKind {
+    EventWhenflagclicked,
+    Cmp(CmpBlockKind),
+    Expr(ExprBlockKind),
+    Stmt(StmtBlockKind),
 }
 
 pub(super) fn parse_kind(
@@ -180,158 +196,198 @@ pub(super) fn parse_kind(
     use super::getter;
     Ok(match opcode {
         "event_whenflagclicked" => BlockKind::EventWhenflagclicked,
-        "control_repeat_until" => BlockKind::ControlRepeatuntil {
+        "control_repeat_until" => StmtBlockKind::ControlRepeatuntil {
             condition: getter!(inputs."CONDITION" as optional blockref)?,
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
-        },
-        "looks_sayforsecs" => BlockKind::LooksSayforsecs {
+        }
+        .into(),
+        "looks_sayforsecs" => StmtBlockKind::LooksSayforsecs {
             message: getter!(inputs."MESSAGE" as expression)?,
             secs: getter!(inputs."SECS" as expression)?,
-        },
-        "looks_thinkforsecs" => BlockKind::LooksThinkforsecs {
+        }
+        .into(),
+        "looks_thinkforsecs" => StmtBlockKind::LooksThinkforsecs {
             message: getter!(inputs."MESSAGE" as expression)?,
             secs: getter!(inputs."SECS" as expression)?,
-        },
-        "looks_think" => BlockKind::LooksThink {
+        }
+        .into(),
+        "looks_think" => StmtBlockKind::LooksThink {
             message: getter!(inputs."MESSAGE" as expression)?,
-        },
-        "looks_say" => BlockKind::LooksSay {
+        }
+        .into(),
+        "looks_say" => StmtBlockKind::LooksSay {
             message: getter!(inputs."MESSAGE" as expression)?,
-        },
-        "operator_gt" => BlockKind::OperatorGt {
+        }
+        .into(),
+        "operator_gt" => CmpBlockKind::OperatorGt {
             operand1: getter!(inputs."OPERAND1" as expression)?,
             operand2: getter!(inputs."OPERAND2" as expression)?,
-        },
-        "operator_lt" => BlockKind::OperatorLt {
+        }
+        .into(),
+        "operator_lt" => CmpBlockKind::OperatorLt {
             operand1: getter!(inputs."OPERAND1" as expression)?,
             operand2: getter!(inputs."OPERAND2" as expression)?,
-        },
-        "operator_equals" => BlockKind::OperatorEquals {
+        }
+        .into(),
+        "operator_equals" => CmpBlockKind::OperatorEquals {
             operand1: getter!(inputs."OPERAND1" as expression)?,
             operand2: getter!(inputs."OPERAND2" as expression)?,
-        },
-        "operator_add" => BlockKind::OperatorAdd {
+        }
+        .into(),
+        "operator_add" => ExprBlockKind::OperatorAdd {
             num1: getter!(inputs."NUM1" as expression)?,
             num2: getter!(inputs."NUM2" as expression)?,
-        },
-        "control_wait" => BlockKind::ControlWait {
+        }
+        .into(),
+        "control_wait" => StmtBlockKind::ControlWait {
             duration: getter!(inputs."DURATION" as expression)?,
-        },
-        "operator_mod" => BlockKind::OperatorMod {
+        }
+        .into(),
+        "operator_mod" => ExprBlockKind::OperatorMod {
             num1: getter!(inputs."NUM1" as expression)?,
             num2: getter!(inputs."NUM2" as expression)?,
-        },
-        "operator_divide" => BlockKind::OperatorDivide {
+        }
+        .into(),
+        "operator_divide" => ExprBlockKind::OperatorDivide {
             num1: getter!(inputs."NUM1" as expression)?,
             num2: getter!(inputs."NUM2" as expression)?,
-        },
-        "operator_subtract" => BlockKind::OperatorSubtract {
+        }
+        .into(),
+        "operator_subtract" => ExprBlockKind::OperatorSubtract {
             num1: getter!(inputs."NUM1" as expression)?,
             num2: getter!(inputs."NUM2" as expression)?,
-        },
-        "operator_multiply" => BlockKind::OperatorMultiply {
+        }
+        .into(),
+        "operator_multiply" => ExprBlockKind::OperatorMultiply {
             num1: getter!(inputs."NUM1" as expression)?,
             num2: getter!(inputs."NUM2" as expression)?,
-        },
-        "operator_and" => BlockKind::OperatorAnd {
-            operand1: getter!(inputs."OPERAND1" as expression)?,
-            operand2: getter!(inputs."OPERAND2" as expression)?,
-        },
-        "operator_or" => BlockKind::OperatorOr {
-            operand1: getter!(inputs."OPERAND1" as expression)?,
-            operand2: getter!(inputs."OPERAND2" as expression)?,
-        },
-        "operator_not" => BlockKind::OperatorNot {
-            operand: getter!(inputs."OPERAND" as expression)?,
-        },
-        "operator_round" => BlockKind::OperatorRound {
+        }
+        .into(),
+        "operator_and" => CmpBlockKind::OperatorAnd {
+            operand1: getter!(inputs."OPERAND1" as blockref)?,
+            operand2: getter!(inputs."OPERAND2" as blockref)?,
+        }
+        .into(),
+        "operator_or" => CmpBlockKind::OperatorOr {
+            operand1: getter!(inputs."OPERAND1" as blockref)?,
+            operand2: getter!(inputs."OPERAND2" as blockref)?,
+        }
+        .into(),
+        "operator_not" => CmpBlockKind::OperatorNot {
+            operand: getter!(inputs."OPERAND" as blockref)?,
+        }
+        .into(),
+        "operator_round" => ExprBlockKind::OperatorRound {
             num: getter!(inputs."NUM" as expression)?,
-        },
-        "operator_length" => BlockKind::OperatorLength {
+        }
+        .into(),
+        "operator_length" => ExprBlockKind::OperatorLength {
             string: getter!(inputs."STRING" as expression)?,
-        },
-        "data_setvariableto" => BlockKind::DataSetvariableto {
+        }
+        .into(),
+        "data_setvariableto" => StmtBlockKind::DataSetvariableto {
             variable_to_set: getter!(fields."VARIABLE" as variableref)?,
             value: getter!(inputs."VALUE" as expression)?,
-        },
-        "operator_contains" => BlockKind::OperatorContains {
+        }
+        .into(),
+        "operator_contains" => CmpBlockKind::OperatorContains {
             string1: getter!(inputs."STRING1" as expression)?,
             string2: getter!(inputs."STRING2" as expression)?,
-        },
-        "operator_join" => BlockKind::OperatorJoin {
+        }
+        .into(),
+        "operator_join" => ExprBlockKind::OperatorJoin {
             string1: getter!(inputs."STRING1" as expression)?,
             string2: getter!(inputs."STRING2" as expression)?,
-        },
-        "operator_letter_of" => BlockKind::OperatorLetterOf {
+        }
+        .into(),
+        "operator_letter_of" => ExprBlockKind::OperatorLetterOf {
             letter: getter!(inputs."LETTER" as expression)?,
             string: getter!(inputs."STRING" as expression)?,
-        },
-        "operator_mathop" => BlockKind::OperatorMathop {
+        }
+        .into(),
+        "operator_mathop" => ExprBlockKind::OperatorMathop {
             operator: getter!(fields."OPERATOR" as dropdown)?,
             num: getter!(inputs."NUM" as expression)?,
-        },
-        "sensing_current" => BlockKind::SensingCurrent {
+        }
+        .into(),
+        /*"sensing_current" => ExprBlockKind::SensingCurrent {
             currentmenu: getter!(fields."CURRENTMENU" as dropdown)?,
-        },
-        // "sensing_dayssince2000" => BlockKind::SensingDayssince2000,
-        "sensing_askandwait" => BlockKind::SensingAskandwait {
+        }
+        .into(),*/
+        // "sensing_dayssince2000" => ExprBlockKind::SensingDayssince2000.into(),
+        "sensing_askandwait" => StmtBlockKind::SensingAskandwait {
             question: getter!(inputs."QUESTION" as expression)?,
-        },
-        "control_if" => BlockKind::ControlIf {
+        }
+        .into(),
+        "control_if" => StmtBlockKind::ControlIf {
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
-        },
-        "control_forever" => BlockKind::ControlForever {
+        }
+        .into(),
+        "control_forever" => StmtBlockKind::ControlForever {
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
-        },
-        "control_repeat" => BlockKind::ControlRepeat {
+        }
+        .into(),
+        "control_repeat" => StmtBlockKind::ControlRepeat {
             times: getter!(inputs."TIMES" as expression)?,
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
-        },
-        "control_stop" => BlockKind::ControlStop {
+        }
+        .into(),
+        "control_stop" => StmtBlockKind::ControlStop {
             stop_option: getter!(fields."STOP_OPTION" as dropdown)?,
-        },
-        "control_if_else" => BlockKind::ControlIfElse {
+        }
+        .into(),
+        "control_if_else" => StmtBlockKind::ControlIfElse {
             condition: getter!(inputs."CONDITION" as optional blockref)?,
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
             substack2: getter!(inputs."SUBSTACK2" as optional blockref)?,
-        },
-        "control_wait_until" => BlockKind::ControlWaitUntil {
+        }
+        .into(),
+        "control_wait_until" => StmtBlockKind::ControlWaitUntil {
             condition: getter!(inputs."CONDITION" as optional blockref)?,
-        },
-        "data_deleteoflist" => BlockKind::DataDeleteoflist {
+        }
+        .into(),
+        "data_deleteoflist" => StmtBlockKind::DataDeleteoflist {
             list: getter!(fields."LIST" as listref)?,
             index: getter!(inputs."INDEX" as expression)?,
-        },
-        "data_lengthoflist" => BlockKind::DataLengthoflist {
+        }
+        .into(),
+        "data_lengthoflist" => ExprBlockKind::DataLengthoflist {
             list: getter!(fields."LIST" as listref)?,
-        },
-        "data_insertatlist" => BlockKind::DataInsertatlist {
-            list: getter!(fields."LIST" as listref)?,
-            index: getter!(inputs."INDEX" as expression)?,
-            item: getter!(inputs."ITEM" as expression)?,
-        },
-        "data_replaceitemoflist" => BlockKind::DataReplaceitemoflist {
+        }
+        .into(),
+        "data_insertatlist" => StmtBlockKind::DataInsertatlist {
             list: getter!(fields."LIST" as listref)?,
             index: getter!(inputs."INDEX" as expression)?,
             item: getter!(inputs."ITEM" as expression)?,
-        },
-        "data_listcontainsitem" => BlockKind::DataListcontainsitem {
+        }
+        .into(),
+        "data_replaceitemoflist" => StmtBlockKind::DataReplaceitemoflist {
+            list: getter!(fields."LIST" as listref)?,
+            index: getter!(inputs."INDEX" as expression)?,
+            item: getter!(inputs."ITEM" as expression)?,
+        }
+        .into(),
+        "data_listcontainsitem" => CmpBlockKind::DataListcontainsitem {
             list: getter!(fields."LIST" as listref)?,
             item: getter!(inputs."ITEM" as expression)?,
-        },
-        "data_addtolist" => BlockKind::DataAddtolist {
+        }
+        .into(),
+        "data_addtolist" => StmtBlockKind::DataAddtolist {
             list: getter!(fields."LIST" as listref)?,
             item: getter!(inputs."ITEM" as expression)?,
-        },
-        "data_itemnumoflist" => BlockKind::DataItemnumoflist {
+        }
+        .into(),
+        "data_itemnumoflist" => ExprBlockKind::DataItemnumoflist {
             list: getter!(fields."LIST" as listref)?,
             item: getter!(inputs."ITEM" as expression)?,
-        },
-        "argument_reporter_string_number" => BlockKind::ArgumentReporterStringNumber {
+        }
+        .into(),
+        "argument_reporter_string_number" => ExprBlockKind::ArgumentReporterStringNumber {
             value: getter!(fields."VALUE" as argumentreporter)?,
-        },
-        "sensing_timer" => BlockKind::SensingTimer,
-        "sensing_answer" => BlockKind::SensingAnswer,
+        }
+        .into(),
+        // "sensing_timer" => ExprBlockKind::SensingTimer.into(),
+        "sensing_answer" => ExprBlockKind::SensingAnswer.into(),
         "operator_random"
         | "seinsing_touchingcolor"
         | "sensing_coloristouchingcolor"
@@ -339,7 +395,9 @@ pub(super) fn parse_kind(
         | "control_create_clone_of"
         | "control_start_as_clone"
         | "sound_sounds_menu"
-        | "sensing_dayssince2000" => {
+        | "sensing_dayssince2000"
+        | "sensing_current"
+        | "sensing_timer" => {
             return Err(super::ParseKindError::OpcodeUnsupported(opcode.into()));
         }
         // typically this also means unsupported

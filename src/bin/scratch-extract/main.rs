@@ -118,7 +118,7 @@ fn main() {
         extract_from_handle(&mut in_handle, &mut out_handle, args.select)
     };
     if let Err(error) = result {
-        log::error!("error occured: {error}");
+        log::error!("error occured: {error:#?}");
         std::process::exit(1);
     }
 }

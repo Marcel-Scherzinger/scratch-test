@@ -21,6 +21,12 @@ pub enum TargetListsError {
     AtLeastOneInvalid(Id),
 }
 
+impl TargetLists {
+    pub fn iter_lists(&self) -> impl Iterator<Item = &(List, Vec<VariableValue>)> {
+        self.map.values()
+    }
+}
+
 impl crate::FromJsonExt<Self, TargetListsError> for TargetLists {
     fn from_json_without_ctx(value: &serde_json::Value) -> Result<Self, TargetListsError> {
         let dict = value.as_object().ok_or(TargetListsError::ExpectedObject)?;

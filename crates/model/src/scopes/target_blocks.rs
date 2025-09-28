@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use crate::{BlockKind, BlockKindError, FromJsonExt, Id, ext::JsonCtxError};
 
@@ -15,8 +15,18 @@ pub enum TargetBlocksError {
 
 #[derive(Debug)]
 pub struct TargetBlocks {
-    map: HashMap<Id, BlockWrapper>,
+    map: HashMap<Id, Rc<BlockWrapper>>,
 }
+
+impl TargetBlocks {
+    pub fn iter_blocks(&self) -> impl Iterator<Item = &Rc<BlockWrapper>> {
+        self.map.values()
+    }
+    pub fn get(&self, id: &Id) -> Option<&Rc<BlockWrapper>> {
+        self.map.get(id)
+    }
+}
+
 impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     fn from_json_without_ctx(value: &serde_json::Value) -> Result<Self, TargetBlocksError> {
         let dict = value.as_object().ok_or(TargetBlocksError::ExpectedObject)?;
@@ -26,7 +36,7 @@ impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
             .map(|(id, obj): (&String, &serde_json::Value)| {
                 let id: Id = id.clone().into();
                 match BlockWrapper::from_json_with_ctx(id.clone(), obj) {
-                    Ok(b) => Ok((id, b)),
+                    Ok(b) => Ok((id, b.into())),
                     Err(error) => Err(TargetBlocksError::AtLeastOneInvalid { id, error }),
                 }
             })
@@ -36,7 +46,7 @@ impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, derive_getters::Getters)]
 pub struct BlockWrapper {
     id: Id,
     inner: BlockKind,

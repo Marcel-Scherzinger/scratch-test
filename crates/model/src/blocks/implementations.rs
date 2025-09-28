@@ -1,6 +1,6 @@
 use crate::{
     BlockKind, BlockKindError,
-    blocks::ParseKindError,
+    blocks::{ExprBlockKind, ParseKindError},
     constants,
     interpret_json::{List, Variable},
 };
@@ -41,11 +41,11 @@ impl crate::FromJsonExt<Self, BlockKindError> for BlockKind {
             match opcode_num {
                 VAR_PRIMITIVE => {
                     let variable: Variable = crate::interpret_json::get_variable_ref(obj)?;
-                    Ok(Self::RDataVar { variable })
+                    Ok(ExprBlockKind::RDataVar { variable }.into())
                 }
                 LIST_PRIMITIVE => {
                     let list: List = crate::interpret_json::get_list_ref(obj)?;
-                    Ok(Self::RDataList { list })
+                    Ok(ExprBlockKind::RDataList { list }.into())
                 }
                 _ => Err(BlockKindError::InvalidBlockType),
             }

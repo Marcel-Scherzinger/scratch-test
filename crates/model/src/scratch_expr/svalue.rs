@@ -9,11 +9,73 @@ use std::{borrow::Cow, convert::Infallible, str::FromStr};
 ///
 /// So it is useful to have a type that mimics this implicit conversions
 /// behaviour.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SValue {
     Text(String),
     Int(i64),
     Float(f64),
+}
+
+impl SValue {
+    pub fn scratch_eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Text(a), Self::Text(b)) => a == b,
+            (Self::Int(a), Self::Int(b)) => a == b,
+            (Self::Float(a), Self::Float(b)) => a == b,
+            (Self::Float(_), Self::Int(_)) | (Self::Int(_), Self::Float(_)) => {
+                self.as_float() == other.as_float()
+            }
+            (Self::Text(_), Self::Int(_)) | (Self::Int(_), Self::Text(_)) => {
+                self.as_int() == other.as_int()
+            }
+            (Self::Text(_), Self::Float(_)) | (Self::Float(_), Self::Text(_)) => {
+                self.as_float() == other.as_float()
+            }
+        }
+    }
+
+    pub fn same_numbers_wrap_op(
+        &self,
+        other: &SValue,
+        on_int: impl Fn(i64, i64) -> i64,
+        on_float: impl Fn(f64, f64) -> f64,
+    ) -> Self {
+        match (self, other) {
+            (Self::Float(_), _) | (_, Self::Float(_)) => {
+                Self::Float(on_float(self.as_float(), other.as_float()))
+            }
+            (Self::Text(text), Self::Int(_)) if !text.contains(".") => {
+                Self::Int(on_int(self.as_int(), other.as_int()))
+            }
+            (Self::Int(_), Self::Text(text)) if !text.contains(".") => {
+                Self::Int(on_int(self.as_int(), other.as_int()))
+            }
+            (Self::Int(_), Self::Int(_)) => Self::Int(on_int(self.as_int(), other.as_int())),
+            (Self::Text(_), _) | (_, Self::Text(_)) => {
+                Self::Float(on_float(self.as_float(), other.as_float()))
+            }
+        }
+    }
+    pub fn same_numbers_op<O>(
+        &self,
+        other: &SValue,
+        on_int: impl Fn(i64, i64) -> O,
+        on_float: impl Fn(f64, f64) -> O,
+    ) -> O {
+        match (self, other) {
+            (Self::Float(_), _) | (_, Self::Float(_)) => {
+                on_float(self.as_float(), other.as_float())
+            }
+            (Self::Text(text), Self::Int(_)) if !text.contains(".") => {
+                on_int(self.as_int(), other.as_int())
+            }
+            (Self::Int(_), Self::Text(text)) if !text.contains(".") => {
+                on_int(self.as_int(), other.as_int())
+            }
+            (Self::Int(_), Self::Int(_)) => on_int(self.as_int(), other.as_int()),
+            (Self::Text(_), _) | (_, Self::Text(_)) => on_float(self.as_float(), other.as_float()),
+        }
+    }
 }
 
 impl TryFrom<serde_json::Number> for SValue {
@@ -78,8 +140,8 @@ impl ScratchExpr for SValue {
             Self::Float(f) => {
                 let f = *f;
                 if f.is_finite() {
-                    if f.round() == f && i64::MIN as f64 <= f && f <= i64::MAX as f64 {
-                        f as i64
+                    if i64::MIN as f64 <= f && f <= i64::MAX as f64 {
+                        f.round() as i64
                     } else {
                         // value doesn't fit into i64
                         0

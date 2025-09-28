@@ -3,7 +3,7 @@ use crate::{
     constants, scratch_expr::SValue,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     name: String,
     id: Id,
@@ -12,9 +12,15 @@ impl Variable {
     pub fn new(name: String, id: Id) -> Self {
         Self { name, id }
     }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn id(&self) -> &Id {
+        &self.id
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct List {
     name: String,
     id: Id,
@@ -22,6 +28,12 @@ pub struct List {
 impl List {
     pub fn new(name: String, id: Id) -> Self {
         Self { name, id }
+    }
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+    pub fn id(&self) -> &Id {
+        &self.id
     }
 }
 

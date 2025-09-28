@@ -11,10 +11,13 @@ mod reader;
 mod scopes;
 mod scratch_expr;
 
-pub use blocks::{BlockAttrError, BlockKind, BlockKindError};
+pub use blocks::{
+    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, ExprBlockKind, StmtBlockKind,
+};
 pub use error::{DocError, Error};
 use ext::*;
 use interpret_json::*;
+pub use interpret_json::{Expression, List, Variable};
 pub use scopes::*;
 pub use scratch_expr::{IntegerOutOfBounds, ScratchExpr};
 

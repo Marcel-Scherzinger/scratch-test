@@ -7,5 +7,5 @@ use _macros::getter;
 use definitions::parse_kind;
 use error::ParseKindError;
 
-pub use definitions::BlockKind;
+pub use definitions::{BlockKind, CmpBlockKind, ExprBlockKind, StmtBlockKind};
 pub use error::{BlockAttrError, BlockKindError};

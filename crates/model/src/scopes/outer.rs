@@ -3,7 +3,7 @@ use crate::{
 };
 
 /// A target is a sprite or the background
-#[derive(Debug)]
+#[derive(Debug, derive_getters::Getters)]
 pub struct Target {
     is_stage: bool,
     name: String,
@@ -48,7 +48,7 @@ impl Target {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, derive_getters::Getters)]
 pub struct ProjectDoc {
     pub(crate) targets: Vec<Target>,
     pub(crate) semver: Option<String>,
