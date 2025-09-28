@@ -424,6 +424,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "interpreter"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "itertools",
+ "log",
+ "model",
+ "thiserror",
+]
+
+[[package]]
 name = "is_terminal_polyfill"
 version = "1.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -664,6 +675,7 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "env_logger",
+ "interpreter",
  "log",
  "model",
  "serde_json",
