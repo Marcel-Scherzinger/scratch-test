@@ -26,6 +26,7 @@ pub enum StmtBlockKind {
         duration: Expression,
     },
     ControlIf {
+        condition: Option<RefBlock>,
         substack: Option<RefBlock>,
     },
     ControlForever {
@@ -320,6 +321,7 @@ pub(super) fn parse_kind(
         }
         .into(),
         "control_if" => StmtBlockKind::ControlIf {
+            condition: getter!(inputs."CONDITION" as optional blockref)?,
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
         }
         .into(),
