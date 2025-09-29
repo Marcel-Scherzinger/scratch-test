@@ -2,6 +2,7 @@ mod cli;
 mod visual;
 
 use clap::Parser;
+use testdata::ExerciseTest;
 use visual::print_report;
 
 use model::*;
@@ -17,13 +18,26 @@ fn main() {
     let path = args.folder;
     let exercise_number = args.exercise;
 
-    let exercise_tests = match testdata::exercises(exercise_number) {
-        Some(e) => e,
-        None => {
-            log::warn!("No tests found for exercise {exercise_number}");
-            std::process::exit(1);
-        }
-    };
+    let exercise_tests: Vec<Option<std::rc::Rc<dyn ExerciseTest>>> =
+        match testdata::exercises(exercise_number) {
+            Some(e) => e
+                .iter()
+                .enumerate()
+                .inspect(|(idx, t)| {
+                    if t.is_some() {
+                        log::warn!(
+                            "No test runner available for {}. part of exercise {exercise_number}",
+                            idx + 1
+                        );
+                    }
+                })
+                .map(|(_, t)| t.clone())
+                .collect(),
+            None => {
+                log::warn!("No tests found for exercise {exercise_number}");
+                std::process::exit(1);
+            }
+        };
 
     let dir_entries = if let Ok(r) = std::fs::read_dir(&path) {
         r.flatten().filter(|e| e.path().is_dir())
@@ -80,11 +94,15 @@ fn main() {
         let parts = exercise_tests.iter().zip(&sb3_files);
 
         for (tester, path) in parts {
-            if let Ok(mut content) = std::fs::File::open(path) {
-                let p = ProjectDoc::from_sb3_stream(&mut content);
-                print_report(person_name, tester.as_ref(), p);
+            if let Some(tester) = tester {
+                if let Ok(mut content) = std::fs::File::open(path) {
+                    let p = ProjectDoc::from_sb3_stream(&mut content);
+                    print_report(person_name, tester.as_ref(), p);
+                } else {
+                    log::error!("Unable to open file {path:?}")
+                }
             } else {
-                log::error!("Unable to open file {path:?}")
+                log::info!("No test runner for {exercise_number} available");
             }
         }
     }
