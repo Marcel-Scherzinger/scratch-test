@@ -26,6 +26,9 @@ impl Interpreter<Starting> {
             K::EventWhenflagclicked | K::EventWhenkeypressed { .. } => {
                 self.state.stack_push_opt(next)?;
             }
+            K::Noop(_noop) => {
+                self.state.stack_push_opt(next)?;
+            }
             K::Stmt(stmt) => match &stmt {
                 S::LooksSay { message } => {
                     let message = self.evaluate_expr(message)?;
@@ -341,6 +344,17 @@ impl Interpreter<Starting> {
                                 .unwrap_or(0);
                             // TODO: range check
                             V::Int(pos as i64)
+                        }
+                        E::DataItemoflist { list, index } => {
+                            let index = self.evaluate_expr(index)?.as_int();
+                            let list = self.state.get_list_elements(list)?;
+                            if index > 0 {
+                                list.get((index - 1) as usize)
+                                    .cloned()
+                                    .unwrap_or(model::VariableValue::Text("".into()))
+                            } else {
+                                model::VariableValue::Text("".into())
+                            }
                         }
                         E::SensingAnswer => V::Text(self.state.read_last_answer()?.into()),
                         E::RDataVar { variable } => self.state.get_variable(variable)?,

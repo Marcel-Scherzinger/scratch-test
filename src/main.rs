@@ -24,7 +24,7 @@ fn main() {
                 .iter()
                 .enumerate()
                 .inspect(|(idx, t)| {
-                    if t.is_some() {
+                    if t.is_none() {
                         log::warn!(
                             "No test runner available for {}. part of exercise {exercise_number}",
                             idx + 1

@@ -7,8 +7,9 @@ After completing the output can be compared to the one of a sample solution.
 By now, no reading of test cases is implemented.
 
 ## Run
-When you run `cargo run` the `sb3/fibonacci.sb3` example file will be executed according
-to the specification in `src/main.rs` and compared to an outputs array.
+When you run `cargo run -- --folder FOLDER --exercise NUMBER`
+the submissions in `FOLDER` will be tested as exercise `NUMBER`.
+
 You can set the log level via the `RUST_LOG` environment variable (`.env` file).
 
 ## scratch-extract

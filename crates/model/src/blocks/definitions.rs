@@ -3,6 +3,12 @@ use crate::{
 };
 
 #[derive(Debug)]
+pub enum NoopStmtBlockKind {
+    DataShowvariable,
+    DataHidevariable,
+}
+
+#[derive(Debug)]
 pub enum StmtBlockKind {
     DataSetvariableto {
         variable_to_set: Variable,
@@ -140,6 +146,10 @@ pub enum ExprBlockKind {
         list: List,
         item: Expression,
     },
+    DataItemoflist {
+        list: List,
+        index: Expression,
+    },
     RDataList {
         list: List,
     },
@@ -195,6 +205,7 @@ pub enum BlockKind {
     Cmp(CmpBlockKind),
     Expr(ExprBlockKind),
     Stmt(StmtBlockKind),
+    Noop(NoopStmtBlockKind),
 }
 
 pub(super) fn parse_kind(
@@ -390,9 +401,16 @@ pub(super) fn parse_kind(
             item: getter!(inputs."ITEM" as expression)?,
         }
         .into(),
+        "data_showvariable" => NoopStmtBlockKind::DataShowvariable.into(),
+        "data_hidevariable" => NoopStmtBlockKind::DataHidevariable.into(),
         "data_listcontainsitem" => CmpBlockKind::DataListcontainsitem {
             list: getter!(fields."LIST" as listref)?,
             item: getter!(inputs."ITEM" as expression)?,
+        }
+        .into(),
+        "data_itemoflist" => ExprBlockKind::DataItemoflist {
+            list: getter!(fields."LIST" as listref)?,
+            index: getter!(inputs."INDEX" as expression)?,
         }
         .into(),
         "data_addtolist" => StmtBlockKind::DataAddtolist {
