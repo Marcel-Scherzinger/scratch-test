@@ -152,7 +152,10 @@ impl Interpreter<Starting> {
                 }
                 S::ControlRepeat { times, substack } => {
                     let remaining = match stack_item {
-                        StackItem::Normal(_) => self.evaluate_expr(times)?.as_int().max(0) as usize,
+                        StackItem::Normal(_) => {
+                            self.state.warn_used_counter_loop();
+                            self.evaluate_expr(times)?.as_int().max(0) as usize
+                        }
                         StackItem::CountLoop(_, remaining) => remaining,
                     };
 

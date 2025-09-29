@@ -20,6 +20,11 @@ pub enum OutputAction {
     ThinkFor(f64),
 }
 
+#[derive(Debug, derive_getters::Getters)]
+pub struct Warnings {
+    used_counter_loop: bool,
+}
+
 pub enum ActionEntry {
     Output { kind: OutputAction, msg: String },
     Sleep(f64),
@@ -61,6 +66,7 @@ pub struct State<X> {
     actions: Vec<ActionEntry>,
     predefined_answers: Vec<String>,
     last_answer: String,
+    warnings: Warnings,
     phantom: std::marker::PhantomData<X>,
 }
 impl State<Finished> {
@@ -72,6 +78,9 @@ impl State<Finished> {
                 None
             }
         })
+    }
+    pub(crate) fn warnings(&self) -> &Warnings {
+        &self.warnings
     }
 }
 
@@ -88,6 +97,7 @@ impl State<Starting> {
             actions: self.actions,
             predefined_answers: self.predefined_answers,
             last_answer: self.last_answer,
+            warnings: self.warnings,
             phantom: Default::default(),
         }
     }
@@ -114,6 +124,9 @@ impl State<Starting> {
             actions: vec![],
             predefined_answers: answers,
             last_answer: "".to_string(),
+            warnings: Warnings {
+                used_counter_loop: false,
+            },
             phantom: Default::default(),
         }
     }
@@ -126,7 +139,7 @@ impl State<Starting> {
         Ok(self.last_answer.as_str())
     }
     pub fn warn_used_counter_loop(&mut self) -> RResult<()> {
-        // TODO: write warning
+        self.warnings.used_counter_loop = true;
         Ok(())
     }
 

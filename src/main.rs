@@ -25,6 +25,10 @@ fn main() {
         println!("program terminated abnormally: {err}");
     }
 
+    if interp.warn_used_counter_loop() {
+        log::warn!("program used counter based loop");
+    }
+
     if outputs == expected_output {
         println!("Output is as expected");
     } else {

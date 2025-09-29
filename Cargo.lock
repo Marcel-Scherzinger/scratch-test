@@ -427,6 +427,7 @@ dependencies = [
 name = "interpreter"
 version = "0.1.0"
 dependencies = [
+ "derive-getters",
  "derive_more",
  "itertools",
  "log",
