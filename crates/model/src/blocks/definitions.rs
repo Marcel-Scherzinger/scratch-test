@@ -5,7 +5,10 @@ use crate::{
 #[derive(Debug)]
 pub enum NoopStmtBlockKind {
     DataShowvariable,
+    DataShowlist,
     DataHidevariable,
+    DataHidelist,
+    LooksShow,
 }
 
 #[derive(Debug)]
@@ -402,7 +405,10 @@ pub(super) fn parse_kind(
         }
         .into(),
         "data_showvariable" => NoopStmtBlockKind::DataShowvariable.into(),
+        "data_showlist" => NoopStmtBlockKind::DataShowlist.into(),
         "data_hidevariable" => NoopStmtBlockKind::DataHidevariable.into(),
+        "data_hidelist" => NoopStmtBlockKind::DataHidelist.into(),
+        "looks_show" => NoopStmtBlockKind::LooksShow.into(),
         "data_listcontainsitem" => CmpBlockKind::DataListcontainsitem {
             list: getter!(fields."LIST" as listref)?,
             item: getter!(inputs."ITEM" as expression)?,
