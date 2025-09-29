@@ -4,18 +4,7 @@ use model::{BlockKind, Id, ScratchExpr};
 use crate::{FinishedInterpreter, Interpreter, RResult, RunError, StackItem, Starting};
 
 impl Interpreter<Starting> {
-    pub fn start(mut self) -> (RResult<()>, FinishedInterpreter) {
-        let res = self.internal_start();
-        (
-            res,
-            FinishedInterpreter {
-                state: self.state.finish(),
-                phantom: Default::default(),
-            },
-        )
-    }
-
-    fn internal_start(&mut self) -> RResult<()> {
+    pub(crate) fn internal_start(&mut self) -> RResult<()> {
         loop {
             self.execute_stmt()?;
             if self.state.stack_top()?.is_none() {
@@ -34,7 +23,7 @@ impl Interpreter<Starting> {
         use BlockKind as K;
         use model::StmtBlockKind as S;
         match &kind {
-            K::EventWhenflagclicked => {
+            K::EventWhenflagclicked | K::EventWhenkeypressed { .. } => {
                 self.state.stack_push_opt(next)?;
             }
             K::Stmt(stmt) => match &stmt {
@@ -94,6 +83,20 @@ impl Interpreter<Starting> {
                 } => {
                     let value = self.evaluate_expr(value)?;
                     self.state.set_variable(variable_to_set, value)?;
+                    self.state.stack_push_opt(next)?;
+                }
+                S::DataChangevariableby { variable, value } => {
+                    let value = self.evaluate_expr(value)?;
+
+                    let old = self.state.get_variable(variable)?;
+
+                    let new = old.same_numbers_wrap_op(
+                        &value,
+                        |old, value| old + value,
+                        |old, value| old + value,
+                    );
+
+                    self.state.set_variable(variable, new)?;
                     self.state.stack_push_opt(next)?;
                 }
                 S::ControlWait { duration } => {
@@ -179,6 +182,11 @@ impl Interpreter<Starting> {
                             list.remove(index - 1);
                         }
                     }
+                    self.state.stack_push_opt(next)?
+                }
+                S::DataDeletealloflist { list } => {
+                    let mut list = self.state.get_mut_list_elements(list)?;
+                    list.clear();
                     self.state.stack_push_opt(next)?
                 }
                 S::DataInsertatlist { list, index, item } => {
