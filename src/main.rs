@@ -1,39 +1,91 @@
-use interpreter::Interpreter;
+mod cli;
+mod visual;
+
+use clap::Parser;
+use visual::print_report;
+
 use model::*;
+
+use crate::cli::Cli;
 
 fn main() {
     let _ = dotenvy::dotenv();
     env_logger::init();
 
-    let answers = vec!["10"].into_iter().map(|s| s.to_string()).collect();
-    let expected_output: Vec<_> = vec!["0", "1", "1", "2", "3", "5", "8", "13", "21", "34"]
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect();
+    let args = Cli::parse();
 
-    let mut content = std::fs::File::open("sb3/fibonacci.sb3").unwrap();
-    let p = ProjectDoc::from_sb3_stream(&mut content).unwrap();
-    // println!("{p:#?}"); // print model
-    let interp = Interpreter::new(p, answers).unwrap();
-    let (res, interp) = interp.start();
-    let outputs: Vec<_> = interp
-        .all_output_actions()
-        .map(|(_kind, message)| message.clone())
-        .collect();
+    let path = args.folder;
+    let exercise_number = args.exercise;
 
-    if let Err(err) = res {
-        println!("program terminated abnormally: {err}");
-    }
+    let exercise_tests = match testdata::exercises(exercise_number) {
+        Some(e) => e,
+        None => {
+            log::warn!("No tests found for exercise {exercise_number}");
+            std::process::exit(1);
+        }
+    };
 
-    if interp.warn_used_counter_loop() {
-        log::warn!("program used counter based loop");
-    }
-
-    if outputs == expected_output {
-        println!("Output is as expected");
+    let dir_entries = if let Ok(r) = std::fs::read_dir(&path) {
+        r.flatten().filter(|e| e.path().is_dir())
     } else {
-        println!("Program output was:  {outputs:?}");
-        println!("Expected output was: {expected_output:?}");
+        log::error!("Unable to read directory: {path:?}");
         std::process::exit(1);
+    };
+
+    for folder in dir_entries {
+        let folder_name = match folder.file_name().into_string() {
+            Ok(s) => s,
+            Err(err) => {
+                log::error!("Folder has no valid utf-8 name: {err:?}");
+                continue;
+            }
+        };
+        let person_name = match folder_name.split_once("_") {
+            Some((name, _)) => name,
+            None => &folder_name,
+        };
+
+        let mut sb3_files: Vec<_> = match std::fs::read_dir(folder.path()) {
+            Ok(r) => r
+                .filter(|entry| {
+                    entry
+                        .as_ref()
+                        .ok()
+                        .and_then(|e| e.path().extension().map(|o| o.to_os_string()))
+                        .and_then(|o| o.to_str().map(|s| s.to_string()))
+                        == Some("sb3".to_string())
+                })
+                .flatten()
+                .map(|e| e.path())
+                .collect(),
+            Err(_err) => {
+                log::error!("Unable to read subdir: {:?}", folder.path());
+                continue;
+            }
+        };
+        alphanumeric_sort::sort_path_slice(&mut sb3_files);
+
+        if exercise_tests.iter().len() != sb3_files.len() {
+            let mut person_fmt = person_name.to_string();
+            person_fmt.push(':');
+            person_fmt.push_str(&" ".repeat(20 - person_fmt.len()));
+            println!(
+                "[MATC] {person_fmt} {} scratch files for {} exercises, match not possible",
+                sb3_files.len(),
+                exercise_tests.iter().len()
+            );
+            continue;
+        }
+
+        let parts = exercise_tests.iter().zip(&sb3_files);
+
+        for (tester, path) in parts {
+            if let Ok(mut content) = std::fs::File::open(path) {
+                let p = ProjectDoc::from_sb3_stream(&mut content);
+                print_report(person_name, tester.as_ref(), p);
+            } else {
+                log::error!("Unable to open file {path:?}")
+            }
+        }
     }
 }
