@@ -97,7 +97,15 @@ fn main() {
             if let Some(tester) = tester {
                 if let Ok(mut content) = std::fs::File::open(path) {
                     let p = ProjectDoc::from_sb3_stream(&mut content);
-                    print_report(person_name, tester.as_ref(), p);
+                    print_report(
+                        person_name,
+                        tester.as_ref(),
+                        p,
+                        &path
+                            .file_name()
+                            .map(|s| s.to_string_lossy())
+                            .unwrap_or_default(),
+                    );
                 } else {
                     log::error!("Unable to open file {path:?}")
                 }

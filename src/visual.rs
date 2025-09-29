@@ -6,6 +6,7 @@ pub fn print_report<E: ExerciseTest + ?Sized>(
     person: &str,
     tester: &E,
     doc: Result<model::ProjectDoc, DocError>,
+    file_name: &str,
 ) {
     use colored::Colorize;
     let (ex_num, ex_let) = tester.exercise();
@@ -33,7 +34,8 @@ pub fn print_report<E: ExerciseTest + ?Sized>(
         let perfect = format!("{ :2}", report.perfect_cases());
 
         let str = format_args!(
-            "{person} exercise {ex_num}{ex_let} {errors} error(s), {perfect} successful run(s)",
+            "{person} exercise {ex_num}{ex_let} {errors} error(s), {perfect} successful run(s) ({})",
+            file_name.italic()
         );
         if report.error_cases().is_empty() {
             let str = format!("[OK]   {str}");
