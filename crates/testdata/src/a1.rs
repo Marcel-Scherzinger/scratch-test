@@ -102,6 +102,7 @@ fn run_with(
         if last == &expected {
             return Ok(());
         }
+        let last = last.trim_end_matches(|s: char| s.is_ascii_punctuation());
 
         if let Some(prefix) = last.strip_suffix(&expected) {
             let last_symbol = prefix.chars().last().unwrap_or_default();
