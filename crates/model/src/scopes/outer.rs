@@ -48,8 +48,8 @@ impl Target {
     }
 }
 
-#[derive(Debug, derive_getters::Getters)]
+#[derive(Debug, derive_getters::Getters, Clone)]
 pub struct ProjectDoc {
-    pub(crate) targets: Vec<Target>,
+    pub(crate) targets: std::rc::Rc<[Target]>,
     pub(crate) semver: Option<String>,
 }

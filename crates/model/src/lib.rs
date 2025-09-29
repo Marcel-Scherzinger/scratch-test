@@ -36,16 +36,10 @@ impl ProjectDoc {
             .as_array()
             .ok_or(TargetError::NoTargetsArray)
             .with_json(&doc)?;
-        let targets: Vec<Target> = targets
-            .iter()
-            .map(Target::from_json)
-            .inspect(|a| {
-                if let Err(e) = a {
-                    panic!("{e:#?}\n{doc:#?}")
-                }
-            })
-            .map(|a| a.unwrap())
-            .collect();
-        Ok(ProjectDoc { targets, semver })
+        let targets: Result<Vec<Target>, _> = targets.iter().map(Target::from_json).collect();
+        Ok(ProjectDoc {
+            targets: targets?.into(),
+            semver,
+        })
     }
 }

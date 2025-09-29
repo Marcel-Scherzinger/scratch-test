@@ -8,6 +8,10 @@ pub enum StmtBlockKind {
         variable_to_set: Variable,
         value: Expression,
     },
+    DataChangevariableby {
+        variable: Variable,
+        value: Expression,
+    },
     LooksSayforsecs {
         message: Expression,
         secs: Expression,
@@ -50,6 +54,9 @@ pub enum StmtBlockKind {
     DataDeleteoflist {
         list: List,
         index: Expression,
+    },
+    DataDeletealloflist {
+        list: List,
     },
     DataInsertatlist {
         list: List,
@@ -184,6 +191,7 @@ pub enum CmpBlockKind {
 #[derive(Debug, derive_more::From)]
 pub enum BlockKind {
     EventWhenflagclicked,
+    EventWhenkeypressed { key_option: DropdownSelection },
     Cmp(CmpBlockKind),
     Expr(ExprBlockKind),
     Stmt(StmtBlockKind),
@@ -197,6 +205,9 @@ pub(super) fn parse_kind(
     use super::getter;
     Ok(match opcode {
         "event_whenflagclicked" => BlockKind::EventWhenflagclicked,
+        "event_whenkeypressed" => BlockKind::EventWhenkeypressed {
+            key_option: getter!(fields."KEY_OPTION" as dropdown)?,
+        },
         "control_repeat_until" => StmtBlockKind::ControlRepeatuntil {
             condition: getter!(inputs."CONDITION" as optional blockref)?,
             substack: getter!(inputs."SUBSTACK" as optional blockref)?,
@@ -291,6 +302,12 @@ pub(super) fn parse_kind(
             value: getter!(inputs."VALUE" as expression)?,
         }
         .into(),
+        "data_changevariableby" => StmtBlockKind::DataChangevariableby {
+            variable: getter!(fields."VARIABLE" as variableref)?,
+            value: getter!(inputs."VALUE" as expression)?,
+        }
+        .into(),
+
         "operator_contains" => CmpBlockKind::OperatorContains {
             string1: getter!(inputs."STRING1" as expression)?,
             string2: getter!(inputs."STRING2" as expression)?,
@@ -351,6 +368,10 @@ pub(super) fn parse_kind(
         "data_deleteoflist" => StmtBlockKind::DataDeleteoflist {
             list: getter!(fields."LIST" as listref)?,
             index: getter!(inputs."INDEX" as expression)?,
+        }
+        .into(),
+        "data_deletealloflist" => StmtBlockKind::DataDeletealloflist {
+            list: getter!(fields."LIST" as listref)?,
         }
         .into(),
         "data_lengthoflist" => ExprBlockKind::DataLengthoflist {
