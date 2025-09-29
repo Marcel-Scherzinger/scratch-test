@@ -2,10 +2,28 @@ use std::rc::Rc;
 
 use model::{BlockWrapper, Id, List, ScratchExpr, TargetBlocks, Variable};
 
-use crate::{AllLists, AllVariables, RResult, RunError};
+use crate::{AllLists, AllVariables, Finished, RResult, RunError, Starting};
 
 pub struct Limits {
     max_stmts: usize,
+}
+
+#[derive(Debug, derive_more::Display)]
+pub enum OutputAction {
+    #[display("say")]
+    Say,
+    #[display("say-for {_0}s")]
+    SayFor(f64),
+    #[display("think")]
+    Think,
+    #[display("think-for {_0}s")]
+    ThinkFor(f64),
+}
+
+pub enum ActionEntry {
+    Output { kind: OutputAction, msg: String },
+    Sleep(f64),
+    AskQuestion(String),
 }
 
 #[derive(Debug, derive_more::From, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -32,37 +50,105 @@ impl<T> StackItem<T> {
     }
 }
 
-pub struct State {
+pub struct State<X> {
     doc: model::ProjectDoc,
-    action_logs: Vec<()>,
     all_lists: AllLists,
     all_variables: AllVariables,
     target_idx: usize,
     program_stack: Vec<StackItem<Id>>,
     executed_stmts: usize,
     limits: Limits,
+    actions: Vec<ActionEntry>,
+    predefined_answers: Vec<String>,
+    last_answer: String,
+    phantom: std::marker::PhantomData<X>,
 }
-impl State {
-    pub(crate) fn new(doc: model::ProjectDoc, target_idx: usize, green_flag_id: Id) -> Self {
+impl State<Finished> {
+    pub fn all_output_actions(&self) -> impl Iterator<Item = (&OutputAction, &String)> {
+        self.actions.iter().flat_map(|a| {
+            if let ActionEntry::Output { kind, msg } = a {
+                Some((kind, msg))
+            } else {
+                None
+            }
+        })
+    }
+}
+
+impl State<Starting> {
+    pub(crate) fn finish(self) -> State<Finished> {
+        State {
+            doc: self.doc,
+            all_lists: self.all_lists,
+            all_variables: self.all_variables,
+            target_idx: self.target_idx,
+            program_stack: self.program_stack,
+            executed_stmts: self.executed_stmts,
+            limits: self.limits,
+            actions: self.actions,
+            predefined_answers: self.predefined_answers,
+            last_answer: self.last_answer,
+            phantom: Default::default(),
+        }
+    }
+
+    pub(crate) fn new(
+        doc: model::ProjectDoc,
+        target_idx: usize,
+        green_flag_id: Id,
+        mut answers: Vec<String>,
+    ) -> Self {
         let all_variables = AllVariables::new(&doc, target_idx);
         let all_lists = AllLists::new(&doc, target_idx);
 
+        answers.reverse();
+
         State {
             doc,
-            action_logs: vec![],
             all_lists,
             all_variables,
             target_idx,
             program_stack: vec![green_flag_id.into()],
             executed_stmts: 0,
             limits: Limits { max_stmts: 100 },
+            actions: vec![],
+            predefined_answers: answers,
+            last_answer: "".to_string(),
+            phantom: Default::default(),
         }
     }
+    /// This function may shut down the execution if the program exceeds
+    /// configured resource limits
     pub fn check_limits(&mut self) -> RResult<()> {
         Ok(())
     }
     pub fn read_last_answer(&mut self) -> RResult<&str> {
-        todo!()
+        Ok(self.last_answer.as_str())
+    }
+    pub fn warn_used_counter_loop(&mut self) -> RResult<()> {
+        // TODO: write warning
+        Ok(())
+    }
+
+    pub fn action_ask_question_and_wait(&mut self, question: String) -> RResult<()> {
+        self.last_answer = self
+            .predefined_answers
+            .pop()
+            .ok_or(RunError::QuestionAskedWithoutAnswer)?;
+        self.actions.push(ActionEntry::AskQuestion(question));
+        Ok(())
+    }
+
+    pub fn action_write_output(&mut self, kind: OutputAction, message: String) -> RResult<()> {
+        log::info!("output ({kind}): {message}");
+        self.actions
+            .push(ActionEntry::Output { kind, msg: message });
+        Ok(())
+    }
+    pub fn action_wait(&mut self, duration: f64) -> RResult<()> {
+        log::info!("wait {duration}");
+        self.actions.push(ActionEntry::Sleep(duration));
+        Ok(())
     }
 
     pub fn stack_pop(&mut self) -> RResult<StackItem<Id>> {
@@ -130,7 +216,7 @@ impl State {
         value: model::VariableValue,
     ) -> RResult<()> {
         let mut v = self.all_variables.get_mut(variable)?;
-        log::info!("set variable {} to {value:?}", variable.name());
+        log::debug!("set variable {} to {value:?}", variable.name());
         *v = value;
         Ok(())
     }
@@ -146,5 +232,11 @@ impl State {
     }
     pub fn get_list_elements(&mut self, list: &List) -> RResult<&Vec<model::VariableValue>> {
         self.all_lists.get(list)
+    }
+    pub fn get_mut_list_elements(
+        &mut self,
+        list: &List,
+    ) -> RResult<&mut Vec<model::VariableValue>> {
+        self.all_lists.get_mut(list)
     }
 }

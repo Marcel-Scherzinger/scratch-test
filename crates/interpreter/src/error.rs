@@ -27,5 +27,13 @@ pub enum RunError {
 
     #[error("program used unknown math operator: {0}")]
     UnsupportedMathOperator(String),
+
+    #[error("program called stop block and terminated")]
+    TerminateBecauseOfStop,
+
+    #[error("program entered wait until")]
+    WaitTillNeverStops,
+    #[error("program asked questions but no more answers were predefined")]
+    QuestionAskedWithoutAnswer,
 }
 pub type RResult<T> = Result<T, RunError>;

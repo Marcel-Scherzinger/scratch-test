@@ -1,10 +1,21 @@
 use itertools::Itertools;
 use model::{BlockKind, Id, ScratchExpr};
 
-use crate::{Interpreter, RResult, RunError};
+use crate::{FinishedInterpreter, Interpreter, RResult, RunError, StackItem, Starting};
 
-impl Interpreter {
-    pub fn start(&mut self) -> RResult<()> {
+impl Interpreter<Starting> {
+    pub fn start(mut self) -> (RResult<()>, FinishedInterpreter) {
+        let res = self.internal_start();
+        (
+            res,
+            FinishedInterpreter {
+                state: self.state.finish(),
+                phantom: Default::default(),
+            },
+        )
+    }
+
+    fn internal_start(&mut self) -> RResult<()> {
         loop {
             self.execute_stmt()?;
             if self.state.stack_top()?.is_none() {
@@ -18,18 +29,48 @@ impl Interpreter {
         let kind = block.inner();
         let next = block.next().clone();
 
-        println!("execute: {kind:?}");
+        log::debug!("execute: {kind:?}");
 
         use BlockKind as K;
         use model::StmtBlockKind as S;
         match &kind {
-            K::EventWhenflagclicked => {}
+            K::EventWhenflagclicked => {
+                self.state.stack_push_opt(next)?;
+            }
             K::Stmt(stmt) => match &stmt {
                 S::LooksSay { message } => {
-                    println!("{message:?}");
+                    let message = self.evaluate_expr(message)?;
+                    self.state.action_write_output(
+                        crate::OutputAction::Say,
+                        message.as_text().to_string(),
+                    )?;
+                    self.state.stack_push_opt(next)?;
                 }
                 S::LooksThink { message } => {
-                    println!("think {message:?}");
+                    let message = self.evaluate_expr(message)?;
+                    self.state.action_write_output(
+                        crate::OutputAction::Think,
+                        message.as_text().to_string(),
+                    )?;
+                    self.state.stack_push_opt(next)?;
+                }
+                S::LooksThinkforsecs { message, secs } => {
+                    let message = self.evaluate_expr(message)?;
+                    let secs = self.evaluate_expr(secs)?;
+                    self.state.action_write_output(
+                        crate::OutputAction::ThinkFor(secs.as_float()),
+                        message.as_text().to_string(),
+                    )?;
+                    self.state.stack_push_opt(next)?;
+                }
+                S::LooksSayforsecs { message, secs } => {
+                    let message = self.evaluate_expr(message)?;
+                    let secs = self.evaluate_expr(secs)?;
+                    self.state.action_write_output(
+                        crate::OutputAction::SayFor(secs.as_float()),
+                        message.as_text().to_string(),
+                    )?;
+                    self.state.stack_push_opt(next)?;
                 }
                 S::ControlRepeatuntil {
                     condition,
@@ -43,6 +84,8 @@ impl Interpreter {
                         } else {
                             Err(crate::RunError::ConditionLoopWithoutBodyNeverStops)?;
                         }
+                    } else {
+                        self.state.stack_push_opt(next)?;
                     }
                 }
                 S::DataSetvariableto {
@@ -51,22 +94,143 @@ impl Interpreter {
                 } => {
                     let value = self.evaluate_expr(value)?;
                     self.state.set_variable(variable_to_set, value)?;
+                    self.state.stack_push_opt(next)?;
                 }
+                S::ControlWait { duration } => {
+                    let duration = self.evaluate_expr(duration)?;
+                    self.state.action_wait(duration.as_float());
+                    self.state.stack_push_opt(next)?;
+                }
+                S::ControlIf {
+                    condition,
+                    substack,
+                } => {
+                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    self.state.stack_push_opt(next)?;
+                    // push body if not empty
+                    self.state.stack_push_opt(substack.clone())?;
+                }
+                S::ControlIfElse {
+                    condition,
+                    substack,
+                    substack2,
+                } => {
+                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    self.state.stack_push_opt(next)?;
+                    if condition {
+                        self.state.stack_push_opt(substack.clone())?;
+                    } else {
+                        self.state.stack_push_opt(substack2.clone())?;
+                    }
+                }
+                S::ControlForever { substack } => {
+                    if let Some(substack) = substack {
+                        self.state.stack_push(stack_item)?;
+                        self.state.stack_push(substack.clone())?;
+                    } else {
+                        // TODO: better error variant
+                        return Err(RunError::ConditionLoopWithoutBodyNeverStops);
+                    }
+                }
+                S::ControlStop { stop_option } => match stop_option.as_str() {
+                    "this script" | "all" => {
+                        return Err(RunError::TerminateBecauseOfStop);
+                    }
+                    _ => {
+                        // other scripts of this sprite in single threaded mode?
+                        todo!()
+                    }
+                },
+                S::ControlWaitUntil { condition } => {
+                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    if condition {
+                        self.state.stack_push_opt(next)?;
+                        return Ok(());
+                    } else {
+                        return Err(RunError::WaitTillNeverStops);
+                    }
+                }
+                S::ControlRepeat { times, substack } => {
+                    let remaining = match stack_item {
+                        StackItem::Normal(_) => self.evaluate_expr(times)?.as_int().max(0) as usize,
+                        StackItem::CountLoop(_, remaining) => remaining,
+                    };
 
-                // TODO TODO TODO
-                _ => {}
+                    match remaining {
+                        0 => self.state.stack_push_opt(next)?,
+                        1.. => {
+                            self.state.stack_push(StackItem::CountLoop(
+                                block.id().clone(),
+                                remaining - 1,
+                            ));
+                            self.state.stack_push_opt(substack.clone());
+                        }
+                    }
+                }
+                S::DataDeleteoflist { list, index } => {
+                    let index = self.evaluate_expr(index)?.as_int();
+                    let mut list = self.state.get_mut_list_elements(list)?;
+                    if index > 0 {
+                        let index = index as usize;
+                        if index <= list.len() {
+                            list.remove(index - 1);
+                        }
+                    }
+                    self.state.stack_push_opt(next)?
+                }
+                S::DataInsertatlist { list, index, item } => {
+                    let index = self.evaluate_expr(index)?.as_int();
+                    let item = self.evaluate_expr(item)?;
+                    let mut list = self.state.get_mut_list_elements(list)?;
+
+                    if index > 0 {
+                        let index = index as usize;
+                        if index <= list.len() {
+                            list.insert(index - 1, item);
+                        } else if index == list.len() + 1 {
+                            list.push(item);
+                        }
+                    }
+                    self.state.stack_push_opt(next)?
+                }
+                S::SensingAskandwait { question } => {
+                    let question = self.evaluate_expr(question)?;
+                    self.state
+                        .action_ask_question_and_wait(question.as_text().to_string())?;
+                    self.state.stack_push_opt(next)?;
+                }
+                S::DataReplaceitemoflist { list, index, item } => {
+                    let index = self.evaluate_expr(index)?.as_int();
+                    let item = self.evaluate_expr(item)?;
+                    let mut list = self.state.get_mut_list_elements(list)?;
+
+                    if index > 0 {
+                        let index = index as usize;
+                        if index <= list.len() {
+                            list[index - 1] = item;
+                        }
+                    }
+                    self.state.stack_push_opt(next)?
+                }
+                S::DataAddtolist { list, item } => {
+                    let item = self.evaluate_expr(item)?;
+                    let mut list = self.state.get_mut_list_elements(list)?;
+
+                    list.push(item);
+                    self.state.stack_push_opt(next)?
+                }
             },
             K::Cmp(_) | K::Expr(_) => {
                 Err(crate::RunError::UnexpectedNestingOfBlocks)?;
             }
         }
 
-        self.state.stack_push_opt(next)?;
         Ok(())
     }
 
     fn evaluate_expr(&mut self, expr: &model::Expression) -> RResult<model::VariableValue> {
         use model::Expression as E;
+        log::trace!("evaluate expr: {expr:?}");
         match expr {
             E::Lit(val) => Ok(val.clone()),
             E::Var(var) => self.state.get_variable(var),
@@ -162,7 +326,7 @@ impl Interpreter {
                             let pos = list
                                 .iter()
                                 .find_position(|i| i.scratch_eq(&item))
-                                .map(|(pos, _)| pos)
+                                .map(|(pos, _)| pos + 1)
                                 .unwrap_or(0);
                             // TODO: range check
                             V::Int(pos as i64)
@@ -207,6 +371,7 @@ impl Interpreter {
         let block = self.state.get_cmp_block(&id)?;
         let kind = block.inner();
         use model::CmpBlockKind as C;
+        log::trace!("evaluate cmp: {kind:?}");
         if let model::BlockKind::Cmp(kind) = kind {
             Ok(match kind {
                 C::OperatorOr { operand1, operand2 } => {

@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 mod all_data;
 mod error;
+mod interpreter_report;
 mod interpreter_run;
 mod interpreter_setup;
 mod state;
@@ -11,3 +12,5 @@ pub use error::*;
 pub use interpreter_setup::*;
 use model::{Id, Target};
 pub use state::*;
+
+pub type FinishedInterpreter = Interpreter<Finished>;

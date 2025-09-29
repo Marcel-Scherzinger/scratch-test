@@ -8,18 +8,25 @@ pub enum InterpreterError {
     GreenFlagUncertain(usize),
 }
 
-pub struct Interpreter {
-    pub(crate) state: State,
+pub struct Starting;
+pub struct Finished;
+
+pub struct Interpreter<X> {
+    pub(crate) state: State<X>,
+    pub(super) phantom: std::marker::PhantomData<X>,
 }
 
-impl Interpreter {
-    pub fn new(doc: model::ProjectDoc) -> Result<Self, InterpreterError> {
+impl Interpreter<Starting> {
+    pub fn new(doc: model::ProjectDoc, answers: Vec<String>) -> Result<Self, InterpreterError> {
         let (target_idx, green_flag_id) =
             count_green_flag_events(&doc).map_err(InterpreterError::GreenFlagUncertain)?;
 
-        let state = State::new(doc, target_idx, green_flag_id);
+        let state = State::new(doc, target_idx, green_flag_id, answers);
 
-        Ok(Self { state })
+        Ok(Self {
+            state,
+            phantom: Default::default(),
+        })
     }
 }
 
