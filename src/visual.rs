@@ -13,7 +13,7 @@ pub fn print_report<E: ExerciseTest + ?Sized>(
 
     let mut person = person.to_string();
     person.push(':');
-    person.push_str(&" ".repeat((20 - person.len() as i64).max(0) as usize));
+    person.push_str(&" ".repeat((20 - person.chars().count() as i64).max(0) as usize));
 
     if let Ok(doc) = doc {
         let interpreter = match InterpreterBuilder::new(doc.clone()) {

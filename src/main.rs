@@ -82,7 +82,7 @@ fn main() {
         if exercise_tests.iter().len() != sb3_files.len() {
             let mut person_fmt = person_name.to_string();
             person_fmt.push(':');
-            person_fmt.push_str(&" ".repeat(20 - person_fmt.len()));
+            person_fmt.push_str(&" ".repeat(20 - person_fmt.chars().count()));
             println!(
                 "[MATC] {person_fmt} {} scratch files for {} exercises, match not possible",
                 sb3_files.len(),
