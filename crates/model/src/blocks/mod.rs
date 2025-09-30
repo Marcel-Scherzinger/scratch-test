@@ -6,7 +6,8 @@ mod error;
 mod implementations;
 mod parsing;
 
-use _macros::define_blocks;
+use _macros::{define_blocks, getter};
+use definitions::parse_kind;
 use error::ParseKindError;
 use parsing::parse_kind;
 

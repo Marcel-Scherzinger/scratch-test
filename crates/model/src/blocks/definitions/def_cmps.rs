@@ -1,8 +1,12 @@
-use crate::attr::{Expression, List, RefBlock};
+use crate::attr::{ArgumentReporterName, Expression, List, RefBlock};
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
     pub enum CmpBlockKind (CmpBlockKindUnit):
+
+    "argument_reporter_boolean" => ArgumentReporterBoolean {
+        (field) value: ArgumentReporterName,
+    },
 
     "operator_and" => OperatorAnd {
         operand1: RefBlock,

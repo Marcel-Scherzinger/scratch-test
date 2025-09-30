@@ -25,6 +25,11 @@ impl Interpreter<Starting> {
         use BlockKind as K;
         use model::StmtBlockKind as S;
         match &kind {
+            K::ProceduresDefinition { custom_block } => todo!(),
+            K::ProceduresPrototype {
+                proccode,
+                arguments,
+            } => todo!(),
             K::Event(
                 EventBlockKind::EventWhenflagclicked | EventBlockKind::EventWhenkeypressed { .. },
             ) => {
@@ -418,6 +423,7 @@ impl Interpreter<Starting> {
         log::trace!("evaluate cmp: {kind:?}");
         if let model::BlockKind::Cmp(kind) = kind {
             Ok(match kind {
+                C::ArgumentReporterBoolean { value } => todo!(),
                 C::OperatorOr { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.deref().clone())?;
                     let operand2 = self.evaluate_cmp(operand2.deref().clone())?;

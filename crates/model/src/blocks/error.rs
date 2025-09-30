@@ -22,6 +22,9 @@ pub enum BlockKindError {
     /// Every block should contain an entry "fields" pointing to a json object
     #[error("the \"fields\" object field of this block (kind={block_kind}) is missing")]
     NoFields { block_kind: String },
+    /// Every procedures block should contain an entry "mutation" pointing to a json object
+    #[error("the \"mutation\" object field of this block (kind={block_kind}) is missing")]
+    NoMutation { block_kind: String },
 
     /// The block is unknown
     #[error("the provided block ({0:?}) is unknown")]
@@ -48,7 +51,7 @@ pub enum BlockAttrError {
         attr_name: &'static str,
         /// The way the attribute was interpreted: as expression, block reference, ...
         treated_as: &'static str,
-        /// If it was read from "inputs" or "fields"
+        /// If it was read from "inputs", "fields" or mutation
         source: &'static str,
         /// The exact error that occured
         error: crate::error::FormatError,
@@ -61,7 +64,7 @@ pub enum BlockAttrError {
         attr_name: &'static str,
         /// The way the attribute was interpreted: as expression, block reference, ...
         treated_as: &'static str,
-        /// If it was read from "inputs" or "fields"
+        /// If it was read from "inputs", "fields" or "mutation"
         source: &'static str,
     },
 }
@@ -73,4 +76,5 @@ pub(super) enum ParseKindError {
     #[from(skip)]
     OpcodeUnknown(Rc<str>),
     OpcodeUnsupported(UnsupportedBlockKind),
+    BlockKind(BlockKindError),
 }

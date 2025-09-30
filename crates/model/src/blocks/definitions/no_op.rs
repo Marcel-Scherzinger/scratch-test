@@ -8,4 +8,13 @@ super::define_blocks! {
     "data_hidelist" => DataHidelist,
 
     "looks_show" => LooksShow,
+
+    // TODO: move
+    skip => {
+        ("procedures_call")  ProceduresCall {
+            inputs: (),
+            procode: String,
+            argumentids: String,
+        },
+    },
 }

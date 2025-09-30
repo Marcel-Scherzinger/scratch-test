@@ -19,11 +19,13 @@ impl crate::ext::FromJsonExt<Self, BlockKindError> for BlockKind {
                 .ok_or_else(|| BlockKindError::NoFields {
                     block_kind: opcode.to_string(),
                 })?;
+            let mutation = obj["mutation"].as_object();
 
-            match super::parse_kind(opcode, inputs, fields) {
+            match super::parse_kind(opcode, inputs, fields, mutation) {
                 Err(ParseKindError::OpcodeUnknown(opcode)) => {
                     Err(BlockKindError::UnknownBlock(opcode))
                 }
+                Err(ParseKindError::BlockKind(err)) => Err(err),
                 Err(ParseKindError::OpcodeUnsupported(opcode)) => {
                     Err(BlockKindError::UnsupportedBlock(opcode))
                 }
