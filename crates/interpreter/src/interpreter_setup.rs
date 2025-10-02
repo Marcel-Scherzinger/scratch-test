@@ -1,6 +1,8 @@
+use std::rc::Rc;
+
 use model::{Id, ProjectDoc, Target};
 
-use crate::{RResult, State};
+use crate::{InterpreterReport, RResult, State};
 
 #[derive(Debug, thiserror::Error)]
 pub enum InterpreterError {
@@ -9,7 +11,6 @@ pub enum InterpreterError {
 }
 
 pub struct Starting;
-pub struct Finished;
 
 pub struct InterpreterBuilder {
     doc: ProjectDoc,
@@ -19,8 +20,43 @@ pub struct InterpreterBuilder {
 
 pub struct Interpreter<X> {
     pub(super) result: RResult<()>,
-    pub(crate) state: State<X>,
+    pub(crate) state: State,
     pub(super) phantom: std::marker::PhantomData<X>,
+}
+
+pub struct PrepareInterpreter {
+    doc: ProjectDoc,
+    target_idx: usize,
+    start_block_id: Id,
+    answers: Rc<[model::VariableValue]>,
+}
+
+impl PrepareInterpreter {
+    pub fn with_answers_inner(mut self, answers: Rc<[model::VariableValue]>) -> Self {
+        self.answers = answers;
+        self
+    }
+    pub fn with_answers<T: Into<model::VariableValue>>(
+        mut self,
+        answers: impl IntoIterator<Item = T>,
+    ) -> Self {
+        self.answers = answers.into_iter().map(|t| t.into()).collect();
+        self
+    }
+    pub fn start(self) -> InterpreterReport {
+        let mut interpreter = Interpreter::<Starting> {
+            result: Ok(()),
+            state: State::new(
+                self.doc.clone(),
+                self.target_idx,
+                self.start_block_id.clone(),
+                self.answers,
+            ),
+            phantom: Default::default(),
+        };
+        let res = interpreter.internal_start();
+        InterpreterReport::new(interpreter.state, res)
+    }
 }
 
 impl InterpreterBuilder {
@@ -37,22 +73,12 @@ impl InterpreterBuilder {
             start_block_id: green_flag_id,
         })
     }
-    pub fn start(&self, answers: Vec<String>) -> Interpreter<Finished> {
-        let mut interpreter = Interpreter::<Starting> {
-            result: Ok(()),
-            state: State::new(
-                self.doc.clone(),
-                self.target_idx,
-                self.start_block_id.clone(),
-                answers,
-            ),
-            phantom: Default::default(),
-        };
-        let res = interpreter.internal_start();
-        Interpreter::<Finished> {
-            result: res,
-            state: interpreter.state.finish(),
-            phantom: Default::default(),
+    pub fn prepare(&self) -> PrepareInterpreter {
+        PrepareInterpreter {
+            answers: Rc::from([]),
+            doc: self.doc.clone(),
+            target_idx: self.target_idx,
+            start_block_id: self.start_block_id.clone(),
         }
     }
 }

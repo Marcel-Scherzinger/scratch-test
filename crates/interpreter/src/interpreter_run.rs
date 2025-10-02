@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use model::{BlockKind, Id, ScratchExpr};
 
-use crate::{FinishedInterpreter, Interpreter, RResult, RunError, StackItem, Starting};
+use crate::{Interpreter, RResult, RunError, StackItem, Starting};
 
 impl Interpreter<Starting> {
     pub(crate) fn internal_start(&mut self) -> RResult<()> {
@@ -32,17 +32,15 @@ impl Interpreter<Starting> {
             K::Stmt(stmt) => match &stmt {
                 S::LooksSay { message } => {
                     let message = self.evaluate_expr(message)?;
-                    self.state.action_write_output(
-                        crate::OutputAction::Say,
-                        message.as_text().to_string(),
-                    )?;
+                    self.state
+                        .action_write_output(crate::OutputAction::Say, message.as_text().into())?;
                     self.state.stack_push_opt(next)?;
                 }
                 S::LooksThink { message } => {
                     let message = self.evaluate_expr(message)?;
                     self.state.action_write_output(
                         crate::OutputAction::Think,
-                        message.as_text().to_string(),
+                        message.as_text().into(),
                     )?;
                     self.state.stack_push_opt(next)?;
                 }
@@ -51,7 +49,7 @@ impl Interpreter<Starting> {
                     let secs = self.evaluate_expr(secs)?;
                     self.state.action_write_output(
                         crate::OutputAction::ThinkFor(secs.as_float()),
-                        message.as_text().to_string(),
+                        message.as_text().into(),
                     )?;
                     self.state.stack_push_opt(next)?;
                 }
@@ -60,7 +58,7 @@ impl Interpreter<Starting> {
                     let secs = self.evaluate_expr(secs)?;
                     self.state.action_write_output(
                         crate::OutputAction::SayFor(secs.as_float()),
-                        message.as_text().to_string(),
+                        message.as_text().into(),
                     )?;
                     self.state.stack_push_opt(next)?;
                 }
@@ -138,7 +136,7 @@ impl Interpreter<Starting> {
                         return Err(RunError::ConditionLoopWithoutBodyNeverStops);
                     }
                 }
-                S::ControlStop { stop_option } => match stop_option.as_str() {
+                S::ControlStop { stop_option } => match stop_option.as_ref() {
                     "this script" | "all" => {
                         return Err(RunError::TerminateBecauseOfStop);
                     }
@@ -304,7 +302,7 @@ impl Interpreter<Starting> {
                             let letter = self.evaluate_expr(letter)?.as_int();
                             let string = self.evaluate_expr(string)?;
                             if letter == 0 || letter as usize > string.as_text().len() {
-                                V::Text("".to_string())
+                                V::Text("".into())
                             } else {
                                 V::Text(
                                     string
@@ -312,7 +310,8 @@ impl Interpreter<Starting> {
                                         .chars()
                                         .nth((letter - 1) as usize)
                                         .unwrap_or_default()
-                                        .to_string(),
+                                        .to_string()
+                                        .into(),
                                 )
                             }
                         }
@@ -328,7 +327,9 @@ impl Interpreter<Starting> {
                         E::OperatorJoin { string1, string2 } => {
                             let string1 = self.evaluate_expr(string1)?;
                             let string2 = self.evaluate_expr(string2)?;
-                            V::Text(string1.as_text().to_string() + string2.as_text().as_ref())
+                            V::Text(
+                                (string1.as_text().to_string() + string2.as_text().as_ref()).into(),
+                            )
                         }
                         E::DataLengthoflist { list } => {
                             // TODO: range check
@@ -356,12 +357,12 @@ impl Interpreter<Starting> {
                                 model::VariableValue::Text("".into())
                             }
                         }
-                        E::SensingAnswer => V::Text(self.state.read_last_answer()?.into()),
+                        E::SensingAnswer => self.state.read_last_answer()?.clone(),
                         E::RDataVar { variable } => self.state.get_variable(variable)?,
                         E::RDataList { list } => self.state.get_list_value(list)?,
                         E::OperatorMathop { operator, num } => {
                             let num = self.evaluate_expr(num)?.as_float();
-                            V::Float(match operator.as_str() {
+                            V::Float(match operator.as_ref() {
                                 "e ^" => num.exp(),
                                 "log" => num.log10(),
                                 "ln" => num.ln(),

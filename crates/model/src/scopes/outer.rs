@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use crate::{
     Error, FromJsonExt, TargetBlocks, TargetLists, TargetVariables, ext::WithJsonContextExt,
 };
@@ -50,6 +52,6 @@ impl Target {
 
 #[derive(Debug, derive_getters::Getters, Clone)]
 pub struct ProjectDoc {
-    pub(crate) targets: std::rc::Rc<[Target]>,
-    pub(crate) semver: Option<String>,
+    pub(crate) targets: Rc<[Target]>,
+    pub(crate) semver: Option<Rc<str>>,
 }

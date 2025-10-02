@@ -1,7 +1,7 @@
 use crate::interpret_json::FormatError;
 
 use super::{IntegerOutOfBounds, ScratchExpr};
-use std::{borrow::Cow, convert::Infallible, str::FromStr};
+use std::{borrow::Cow, convert::Infallible, rc::Rc, str::FromStr};
 
 /// This should model a Scratch value.
 /// Scratch treats texts that are non-numeric as the number `0` and also stores numbers
@@ -9,10 +9,13 @@ use std::{borrow::Cow, convert::Infallible, str::FromStr};
 ///
 /// So it is useful to have a type that mimics this implicit conversions
 /// behaviour.
-#[derive(Debug, Clone)]
+#[derive(derive_more::Debug, Clone, derive_more::Display)]
 pub enum SValue {
-    Text(String),
+    #[debug("{_0:?}")]
+    Text(Rc<str>),
+    #[debug("{_0:?}")]
     Int(i64),
+    #[debug("{_0:?}")]
     Float(f64),
 }
 
@@ -167,5 +170,27 @@ impl ScratchExpr for SValue {
             Self::Int(i) => *i as f64, // TODO: precision loss?
             Self::Float(f) => *f,
         }
+    }
+}
+
+impl From<String> for SValue {
+    fn from(value: String) -> Self {
+        Self::Text(value.into())
+    }
+}
+
+impl From<Rc<str>> for SValue {
+    fn from(value: Rc<str>) -> Self {
+        Self::Text(value)
+    }
+}
+impl From<i64> for SValue {
+    fn from(value: i64) -> Self {
+        Self::Int(value)
+    }
+}
+impl From<f64> for SValue {
+    fn from(value: f64) -> Self {
+        Self::Float(value)
     }
 }

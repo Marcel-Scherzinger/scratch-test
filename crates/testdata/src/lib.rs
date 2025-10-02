@@ -2,7 +2,8 @@ mod a1;
 pub(crate) mod defs;
 
 pub use a1::{A1a, A1b};
-pub use defs::{ExercisePart, ExerciseTest, FailedTestRun, ProgramError, TestReport, Warning};
+pub use defs::{ExercisePart, ExerciseTest};
+pub use testreports::ProgramError;
 
 type MaybeTestRunner = Option<std::rc::Rc<dyn ExerciseTest>>;
 

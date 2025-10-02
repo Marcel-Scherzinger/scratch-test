@@ -80,9 +80,7 @@ fn main() {
         alphanumeric_sort::sort_path_slice(&mut sb3_files);
 
         if exercise_tests.iter().len() != sb3_files.len() {
-            let mut person_fmt = person_name.to_string();
-            person_fmt.push(':');
-            person_fmt.push_str(&" ".repeat(20 - person_fmt.chars().count()));
+            let person_fmt = visual::pad_person(person_name);
             println!(
                 "[MATC] {person_fmt} {} scratch files for {} exercises, match not possible",
                 sb3_files.len(),

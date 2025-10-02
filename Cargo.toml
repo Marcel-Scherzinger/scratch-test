@@ -17,12 +17,14 @@ log = "0.4.28"
 model = { path = "crates/model" }
 interpreter = { path = "crates/interpreter" }
 testdata = { path = "crates/testdata" }
+testreports = { path = "crates/testreports" }
 
 clap = { version = "4.5.48", features = ["derive"] }
 dotenvy = "0.15.7"
 env_logger = "0.11.8"
 alphanumeric-sort = "1.5.3"
 colored = "3.0.0"
+itertools = "0.14.0"
 
 [workspace]
-members = ["crates/interpreter","crates/model", "crates/testdata"]
+members = ["crates/interpreter","crates/model", "crates/testdata", "crates/testreports"]

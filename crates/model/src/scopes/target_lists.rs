@@ -59,8 +59,8 @@ fn parse_list(id: Id, def: &serde_json::Value) -> Option<(List, Vec<VariableValu
                 }
                 let text = element
                     .as_str()
-                    .map(str::to_string)
-                    .unwrap_or_else(|| element.to_string());
+                    .map(|s| s.into())
+                    .unwrap_or_else(|| element.to_string().into());
                 VariableValue::Text(text)
             })
             .collect()

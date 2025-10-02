@@ -1,4 +1,6 @@
-use std::collections::BTreeSet;
+use std::rc::Rc;
+
+use testreports::{CategoryTests, TestCase, TestReport};
 
 use crate::defs::*;
 
@@ -21,19 +23,11 @@ impl ExerciseTest for A1a {
         (1, ExercisePart::A)
     }
     fn run(&self, interp: &interpreter::InterpreterBuilder) -> TestReport {
-        let mut warnings = BTreeSet::new();
-        match run_with(interp, &mut warnings, None, None) {
-            Ok(()) => TestReport {
-                perfect_cases: 1,
-                error_cases: vec![],
-                warnings,
-            },
-            Err(err) => TestReport {
-                perfect_cases: 0,
-                error_cases: vec![err],
-                warnings,
-            },
-        }
+        let mut report = TestReport::new();
+        report.add_category("", |tests| {
+            tests.add_result_of(|tests| run_with(interp, tests, Some((1, 5))));
+        });
+        report
     }
 }
 
@@ -42,84 +36,73 @@ impl ExerciseTest for A1b {
         (1, ExercisePart::B)
     }
     fn run(&self, interp: &interpreter::InterpreterBuilder) -> TestReport {
-        let mut warnings = BTreeSet::new();
+        let mut report = TestReport::new();
 
-        let mut perfect = 0;
-        let mut errors = vec![];
+        report.add_category("Beispiel", |tests| {
+            tests.add_result_of(|tests| run_with(interp, tests, Some((1, 5))));
+        });
 
-        for (first, last) in &[(1, 5), (0, 10), (2, 2), (1, 10)] {
-            match run_with(interp, &mut warnings, Some(*first), Some(*last)) {
-                Ok(()) => perfect += 1,
-                Err(err) => errors.push(err),
-            };
-        }
-        TestReport {
-            perfect_cases: perfect,
-            error_cases: errors,
-            warnings,
-        }
+        report.add_category("0 enthalten", |tests| {
+            for (first, last) in &[(0, 5), (0, 10), (1, 10)] {
+                tests.add_result_of(|tests| run_with(interp, tests, Some((*first, *last))));
+            }
+        });
+
+        report.add_category("Start = Ende", |tests| {
+            for border in &[2, 5, 30] {
+                tests.add_result_of(|tests| run_with(interp, tests, Some((*border, *border))));
+            }
+        });
+
+        report
     }
 }
 
 fn run_with(
     interp: &interpreter::InterpreterBuilder,
-    warnings: &mut BTreeSet<Warning>,
-    first: Option<u64>,
-    last: Option<u64>,
-) -> Result<(), FailedTestRun> {
-    let inputs: Vec<String> = vec![first.map(|s| s.to_string()), last.map(|s| s.to_string())]
-        .into_iter()
-        .flatten()
-        .collect();
-    let out = interp.start(inputs.clone());
-    let expected = (first.unwrap_or(1)..=last.unwrap_or(5))
-        .map(|i| 2 * i * i)
-        .sum::<u64>()
-        .to_string();
+    tests: &mut CategoryTests,
+    first_n_last: Option<(i64, i64)>,
+) -> Result<TestCase, TestCase> {
+    let inputs = first_n_last
+        .map(|(first, last)| vec![first, last])
+        .unwrap_or_default();
+    let (first, last) = first_n_last.unwrap_or((1, 5));
 
-    let error = out.result().as_ref().err().and_then(deal_with_run_error);
+    let mut test_case = tests.start(interp.prepare().with_answers(inputs));
+    let error = test_case.program_error();
 
-    let output: Vec<String> = out
-        .all_output_actions()
-        .map(|(_, t)| t.to_string())
-        .collect();
+    let expected = (first..=last).map(|i| 2 * i * i).sum::<i64>().to_string();
 
-    if out.warn_used_counter_loop() {
-        warnings.insert(Warning::CounterLoop);
+    let output: Vec<Rc<str>> = test_case.out().all_output_texts().cloned().collect();
+
+    if test_case.out().warn_used_counter_loop() {
+        tests.global_message(WARN_COUNTER_LOOP);
     }
 
     if error.is_some() {
-        return Err(FailedTestRun {
-            exit_status: error,
-            inputs,
-            program_output: output,
-            expected_output: vec![expected],
-        });
+        test_case.set_expected_output([expected]);
+        return Err(test_case);
     }
     if let Some(last) = output.last()
         && error.is_none()
     {
-        if last == &expected {
-            return Ok(());
+        if last.as_ref() == expected.as_str() {
+            return Ok(test_case);
         }
         let last = last.trim_end_matches(|s: char| s.is_ascii_punctuation());
 
         if let Some(prefix) = last.strip_suffix(&expected) {
             let last_symbol = prefix.chars().last().unwrap_or_default();
             if last_symbol == ' ' {
-                return Ok(());
+                return Ok(test_case);
             }
             if !last_symbol.is_ascii_digit() {
-                warnings.insert(Warning::NoExtraSpace);
+                tests.global_message(HINT_NO_EXTRA_SPACE);
                 // some text or punctuation as prefix
-                return Ok(());
+                return Ok(test_case);
             }
         }
     }
-    Err(FailedTestRun {
-        exit_status: error,
-        inputs,
-        program_output: output,
-        expected_output: vec![expected],
-    })
+    test_case.set_expected_output([expected]);
+    Err(test_case)
 }

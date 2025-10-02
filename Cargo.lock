@@ -465,10 +465,12 @@ dependencies = [
  "dotenvy",
  "env_logger",
  "interpreter",
+ "itertools",
  "log",
  "model",
  "serde_json",
  "testdata",
+ "testreports",
  "thiserror",
  "zip",
 ]
@@ -546,6 +548,17 @@ dependencies = [
  "derive_more",
  "interpreter",
  "log",
+ "testreports",
+]
+
+[[package]]
+name = "testreports"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "interpreter",
+ "itertools",
+ "model",
 ]
 
 [[package]]

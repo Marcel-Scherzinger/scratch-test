@@ -1,6 +1,6 @@
 use model::Id;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
 pub enum RunError {
     #[error("code tried to access variable that wasn't defined: {0:?}")]
     AccessUnknownVariable(Id),

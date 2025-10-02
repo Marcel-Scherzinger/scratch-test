@@ -11,6 +11,8 @@ mod reader;
 mod scopes;
 mod scratch_expr;
 
+use std::rc::Rc;
+
 pub use blocks::{
     BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, ExprBlockKind, StmtBlockKind,
 };
@@ -23,15 +25,15 @@ pub use scratch_expr::{IntegerOutOfBounds, ScratchExpr};
 
 pub use scratch_expr::SValue as VariableValue;
 
-pub type Id = std::rc::Rc<str>;
+pub type Id = Rc<str>;
 pub type OpcodeNum = u64;
 pub type RefBlock = Id;
-pub type DropdownSelection = String;
-pub type ArgumentReporterName = String;
+pub type DropdownSelection = Rc<str>;
+pub type ArgumentReporterName = Rc<str>;
 
 impl ProjectDoc {
     pub fn from_json(doc: serde_json::Value) -> Result<ProjectDoc, Error> {
-        let semver = doc["meta"]["semver"].as_str().map(str::to_string);
+        let semver = doc["meta"]["semver"].as_str().map(Rc::from);
         let targets = doc["targets"]
             .as_array()
             .ok_or(TargetError::NoTargetsArray)
