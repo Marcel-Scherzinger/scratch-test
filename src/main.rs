@@ -1,23 +1,35 @@
 mod cli;
 mod visual;
 
+use std::path::PathBuf;
+
 use clap::Parser;
-use testdata::ExerciseTest;
+use testdata::{ExercisePart, ExerciseTest};
 use visual::print_report;
 
 use model::*;
 
 use crate::cli::Cli;
 
-fn main() {
-    let _ = dotenvy::dotenv();
-    env_logger::init();
+fn run_single(file: PathBuf, exercise_number: u8, exercise_part: ExercisePart) {
+    let tester: std::rc::Rc<dyn ExerciseTest> = match (exercise_number, exercise_part) {
+        (1, ExercisePart::A) => std::rc::Rc::new(testdata::A1a),
+        (1, ExercisePart::B) => std::rc::Rc::new(testdata::A1b),
+        _ => todo!(),
+    };
 
-    let args = Cli::parse();
-
-    let path = args.folder;
-    let exercise_number = args.exercise;
-
+    if let Ok(mut content) = std::fs::File::open(&file) {
+        let p = ProjectDoc::from_sb3_stream(&mut content);
+        let file_name = file
+            .file_name()
+            .map(|os| os.to_string_lossy().clone())
+            .unwrap_or_default();
+        print_report(&file_name, tester.as_ref(), p, &file_name);
+    } else {
+        log::error!("Unable to open file {file:?}")
+    }
+}
+fn run_submissions(path: PathBuf, exercise_number: u8) {
     let exercise_tests: Vec<Option<std::rc::Rc<dyn ExerciseTest>>> =
         match testdata::exercises(exercise_number) {
             Some(e) => e
@@ -110,6 +122,33 @@ fn main() {
             } else {
                 log::info!("No test runner for {exercise_number} available");
             }
+        }
+    }
+}
+
+fn main() {
+    let _ = dotenvy::dotenv();
+    env_logger::init();
+
+    let args = Cli::parse();
+
+    match args.commands {
+        cli::Commands::Submissions { folder, exercise } => run_submissions(folder, exercise),
+        cli::Commands::Single {
+            file,
+            exercise,
+            part,
+        } => {
+            let part = if part.a || part.part == Some('a') {
+                testdata::ExercisePart::A
+            } else if part.b || part.part == Some('b') {
+                testdata::ExercisePart::B
+            } else if part.c || part.part == Some('c') {
+                testdata::ExercisePart::C
+            } else {
+                std::process::exit(4);
+            };
+            run_single(file, exercise, part)
         }
     }
 }
