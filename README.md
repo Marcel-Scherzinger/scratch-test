@@ -1,4 +1,4 @@
-# Scratch tester
+# Scratch test
 For running this application you need to [install Rust](https://rust-lang.org/tools/install/).
 
 This takes a scratch program and provides it with "answers" as input while collecting it's output.
