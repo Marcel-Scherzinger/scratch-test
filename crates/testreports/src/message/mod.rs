@@ -5,10 +5,13 @@ use std::{borrow::Cow, hash::Hash};
 
 pub use messages::Messages;
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, derive_more::Display)]
 pub enum MessageKind {
+    #[display("hint")]
     Hint,
+    #[display("hint-to-fix")]
     HintToFix,
+    #[display("warning")]
     Warning,
 }
 
