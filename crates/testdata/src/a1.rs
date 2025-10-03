@@ -42,15 +42,21 @@ impl ExerciseTest for A1b {
             tests.add_result_of(|tests| run_with(interp, tests, Some((1, 5))));
         });
 
-        report.add_category("0 enthalten", |tests| {
-            for (first, last) in &[(0, 5), (0, 10), (1, 10)] {
-                tests.add_result_of(|tests| run_with(interp, tests, Some((*first, *last))));
+        report.add_category("Beginn bei 0", |tests| {
+            for last in 1..=20 {
+                tests.add_result_of(|tests| run_with(interp, tests, Some((0, last))));
+            }
+        });
+
+        report.add_category("Negativer Beginn", |tests| {
+            for last in 1..=20 {
+                tests.add_result_of(|tests| run_with(interp, tests, Some((-10, last))));
             }
         });
 
         report.add_category("Start = Ende", |tests| {
-            for border in &[2, 5, 30] {
-                tests.add_result_of(|tests| run_with(interp, tests, Some((*border, *border))));
+            for border in 1..=20 {
+                tests.add_result_of(|tests| run_with(interp, tests, Some((border, border))));
             }
         });
 
