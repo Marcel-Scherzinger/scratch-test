@@ -15,6 +15,9 @@ web-sys = { version = "0.3.81", features = ["DataTransfer"] }
 yew = { version = "0.21.0", features = ["csr"] }
 yew-router = "0.18.0"
 
+# see .cargo/config.toml for RUSTFLAGS, needed for randoms in webassembly
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
 model = { path = "../model" }
 interpreter = { path = "../interpreter" }
 testdata = { path = "../testdata" }

@@ -1,0 +1,4 @@
+[build]
+# this enables random numbers while using yew
+rustflags = "--cfg getrandom_backend=\"wasm_js\""
+
