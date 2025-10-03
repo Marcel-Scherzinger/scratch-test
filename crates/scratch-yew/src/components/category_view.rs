@@ -36,11 +36,12 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
     } else {
         html!()
     };
-    let requested_randoms = if let Some(rr) = case.out().requested_randoms() {
+    let requested_randoms = case.out().requested_randoms();
+    let requested_randoms = if !requested_randoms.is_empty() {
         html!(
             <tr>
                 <td>{"requested randoms: "}</td>
-                <td>{format!("{rr:?}")}</td>
+                <td>{format!("{requested_randoms:?}")}</td>
             </tr>
         )
     } else {

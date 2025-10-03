@@ -253,6 +253,11 @@ impl Interpreter<Starting> {
                 use model::VariableValue as V;
                 if let B::Expr(e) = b.inner() {
                     Ok(match e {
+                        E::OperatorRandom { from, to } => {
+                            let from = self.evaluate_expr(from)?;
+                            let to = self.evaluate_expr(to)?;
+                            self.state.generate_random_number(&from, &to)
+                        }
                         E::OperatorAdd { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?;
                             let num2 = self.evaluate_expr(num2)?;

@@ -18,9 +18,8 @@ impl InterpreterReport {
 }
 
 impl InterpreterReport {
-    // TODO
-    pub fn requested_randoms(&self) -> Option<&[model::VariableValue]> {
-        None
+    pub fn requested_randoms(&self) -> &[model::VariableValue] {
+        &self.state.requested_randoms
     }
 
     pub fn all_output_actions(&self) -> impl Iterator<Item = (&OutputAction, &Rc<str>)> {

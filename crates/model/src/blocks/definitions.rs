@@ -136,10 +136,10 @@ pub enum ExprBlockKind {
     OperatorRound {
         num: Expression,
     },
-    /* OperatorRandom {
+    OperatorRandom {
         from: Expression,
         to: Expression,
-    }, */
+    },
     /*SensingCurrent {
         currentmenu: DropdownSelection,
     },*/

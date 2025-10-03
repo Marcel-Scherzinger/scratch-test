@@ -29,7 +29,7 @@ pub struct Warnings {
     used_counter_loop: bool,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct State {
     doc: model::ProjectDoc,
     all_lists: AllLists,
@@ -43,6 +43,26 @@ pub struct State {
     next_predefined_answer_pos: usize,
     last_answer: model::VariableValue,
     warnings: Warnings,
+    requested_randoms: Vec<model::VariableValue>,
+    rng: rand::rngs::ThreadRng,
+}
+
+impl PartialEq for State {
+    fn eq(&self, other: &Self) -> bool {
+        self.doc == other.doc
+            && self.all_lists == other.all_lists
+            && self.all_variables == other.all_variables
+            && self.target_idx == other.target_idx
+            && self.program_stack == other.program_stack
+            && self.executed_stmts == other.executed_stmts
+            && self.limits == other.limits
+            && self.actions == other.actions
+            && self.predefined_answers == other.predefined_answers
+            && self.next_predefined_answer_pos == other.next_predefined_answer_pos
+            && self.last_answer == other.last_answer
+            && self.warnings == other.warnings
+            && self.requested_randoms == other.requested_randoms
+    }
 }
 
 impl State {
@@ -67,10 +87,12 @@ impl State {
             actions: vec![],
             predefined_answers: answers,
             last_answer: model::VariableValue::Text("".into()),
+            requested_randoms: vec![],
             warnings: Warnings {
                 used_counter_loop: false,
             },
             next_predefined_answer_pos: 0,
+            rng: rand::rng(),
         }
     }
     /// This function may shut down the execution if the program exceeds
@@ -84,6 +106,24 @@ impl State {
     pub fn warn_used_counter_loop(&mut self) -> RResult<()> {
         self.warnings.used_counter_loop = true;
         Ok(())
+    }
+    pub fn generate_random_number(
+        &mut self,
+        from: &model::VariableValue,
+        to: &model::VariableValue,
+    ) -> model::VariableValue {
+        use rand::Rng;
+
+        let random = if from.is_best_fit_with_float(to) {
+            let (from, to) = (from.as_float(), to.as_float());
+            model::VariableValue::Float(self.rng.random_range(from..=to))
+        } else {
+            let (from, to) = (from.as_int(), to.as_int());
+            model::VariableValue::Int(self.rng.random_range(from..=to))
+        };
+
+        self.requested_randoms.push(random.clone());
+        random
     }
 
     fn blocks(&self) -> &TargetBlocks {

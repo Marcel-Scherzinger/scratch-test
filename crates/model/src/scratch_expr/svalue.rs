@@ -40,30 +40,20 @@ impl SValue {
     pub fn same_numbers_wrap_op(
         &self,
         other: &SValue,
-        on_int: impl Fn(i64, i64) -> i64,
-        on_float: impl Fn(f64, f64) -> f64,
+        on_int: impl FnOnce(i64, i64) -> i64,
+        on_float: impl FnOnce(f64, f64) -> f64,
     ) -> Self {
-        match (self, other) {
-            (Self::Float(_), _) | (_, Self::Float(_)) => {
-                Self::Float(on_float(self.as_float(), other.as_float()))
-            }
-            (Self::Text(text), Self::Int(_)) if !text.contains(".") => {
-                Self::Int(on_int(self.as_int(), other.as_int()))
-            }
-            (Self::Int(_), Self::Text(text)) if !text.contains(".") => {
-                Self::Int(on_int(self.as_int(), other.as_int()))
-            }
-            (Self::Int(_), Self::Int(_)) => Self::Int(on_int(self.as_int(), other.as_int())),
-            (Self::Text(_), _) | (_, Self::Text(_)) => {
-                Self::Float(on_float(self.as_float(), other.as_float()))
-            }
-        }
+        self.same_numbers_op(
+            other,
+            |a, b| Self::Int(on_int(a, b)),
+            |a, b| Self::Float(on_float(a, b)),
+        )
     }
     pub fn same_numbers_op<O>(
         &self,
         other: &SValue,
-        on_int: impl Fn(i64, i64) -> O,
-        on_float: impl Fn(f64, f64) -> O,
+        on_int: impl FnOnce(i64, i64) -> O,
+        on_float: impl FnOnce(f64, f64) -> O,
     ) -> O {
         match (self, other) {
             (Self::Float(_), _) | (_, Self::Float(_)) => {
@@ -77,6 +67,15 @@ impl SValue {
             }
             (Self::Int(_), Self::Int(_)) => on_int(self.as_int(), other.as_int()),
             (Self::Text(_), _) | (_, Self::Text(_)) => on_float(self.as_float(), other.as_float()),
+        }
+    }
+    pub fn is_best_fit_with_float(&self, other: &SValue) -> bool {
+        match (self, other) {
+            (Self::Float(_), _) | (_, Self::Float(_)) => true,
+            (Self::Text(text), Self::Int(_)) if !text.contains(".") => false,
+            (Self::Int(_), Self::Text(text)) if !text.contains(".") => false,
+            (Self::Int(_), Self::Int(_)) => false,
+            (Self::Text(_), _) | (_, Self::Text(_)) => true,
         }
     }
 }
