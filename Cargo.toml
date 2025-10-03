@@ -27,4 +27,4 @@ colored = "3.0.0"
 itertools = "0.14.0"
 
 [workspace]
-members = ["crates/interpreter","crates/model", "crates/testdata", "crates/testreports"]
+members = ["crates/interpreter","crates/model", "crates/scratch-yew", "crates/testdata", "crates/testreports"]

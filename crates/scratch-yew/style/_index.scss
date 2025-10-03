@@ -1,0 +1,120 @@
+$background-color: rgb(25, 35, 44);
+
+
+body {
+  background-color: $background-color;
+  color: white;
+}
+
+.submission-upload-wrapper {
+  // display: flex;
+}
+
+.submission-drop-container {
+  background-color: lighten($background-color, 10);
+  padding: 1rem;
+  border-radius: 0.6rem;
+  min-height: 3rem;
+  border-style: dashed;
+  border-color: white;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 0.2rem;
+  margin-top: 0.2rem;
+}
+
+.report-overview-box {
+  margin-top: 0.2rem;
+  border-radius: 0.6rem;
+  padding: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.report-overview-all-tests-succeeded {
+  background-color: darken(green, 10);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.report-overview-some-tests-failed {
+  background-color: darken(red, 20);
+  text-align: center;
+}
+
+.report-message-entry[kind='hint'] {
+  color: magenta;
+}
+.report-message-entry[kind='warning'] {
+  color: orange;
+}
+.report-message-entry[kind='hint-to-fix'] {
+  color: cyan;
+}
+
+.report-message-kind-label[kind='hint'] {
+  color: magenta;
+}
+.report-message-kind-label[kind='warning'] {
+  color: orange;
+}
+.report-message-kind-label[kind='hint-to-fix'] {
+  color: cyan;
+}
+
+.report-message-wrapper {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  background-color: darken(#878316, 20);
+  border-radius: 0.6rem;
+  padding: 0.5rem;
+
+  .report-message-kind-label {
+    padding-right: 0.2rem;
+    font-family: "Lucida Console", monospace;
+  }
+}
+
+.category-without-failures-wrapper {
+  background-color: darken(green, 10);
+}
+
+.category-with-warnings-wrapper {
+  background-color: darken(yellow, 10);
+}
+
+.category-with-failures-wrapper {
+  background-color: darken(red, 20);
+}
+
+.category-wrapper {
+  border-radius: 0.6rem;
+  padding: 0.3rem;
+
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  h4 {
+    margin-top: 0.1rem;
+    margin-bottom: 0.1rem;
+  }
+}
+
+.category-summary-line {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+
+  .category-success-count , .category-failure-count {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+    text-align: right;
+  }
+}
+.failed-test-details {
+  border-radius: 0.6rem;
+  padding: 0.3rem;
+  background-color: darken(red, 30);
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
