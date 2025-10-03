@@ -13,7 +13,7 @@ pub enum TargetBlocksError {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TargetBlocks {
     map: HashMap<Id, Rc<BlockWrapper>>,
 }
@@ -46,7 +46,7 @@ impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     }
 }
 
-#[derive(Debug, derive_getters::Getters)]
+#[derive(Debug, derive_getters::Getters, PartialEq)]
 pub struct BlockWrapper {
     id: Id,
     inner: BlockKind,

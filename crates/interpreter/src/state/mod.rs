@@ -13,17 +13,23 @@ use model::{BlockWrapper, Id, List, ScratchExpr, TargetBlocks, Variable};
 
 use crate::{AllLists, AllVariables, RResult, RunError, Starting};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Limits {
-    max_stmts: usize,
+    pub(crate) max_stmts: usize,
+}
+impl Limits {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self { max_stmts: 500 }
+    }
 }
 
-#[derive(Debug, derive_getters::Getters)]
+#[derive(Debug, derive_getters::Getters, PartialEq)]
 pub struct Warnings {
     used_counter_loop: bool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct State {
     doc: model::ProjectDoc,
     all_lists: AllLists,
@@ -45,6 +51,7 @@ impl State {
         target_idx: usize,
         green_flag_id: Id,
         answers: Rc<[model::VariableValue]>,
+        limits: Limits,
     ) -> Self {
         let all_variables = AllVariables::new(&doc, target_idx);
         let all_lists = AllLists::new(&doc, target_idx);
@@ -56,7 +63,7 @@ impl State {
             target_idx,
             program_stack: vec![green_flag_id.into()],
             executed_stmts: 0,
-            limits: Limits { max_stmts: 100 },
+            limits,
             actions: vec![],
             predefined_answers: answers,
             last_answer: model::VariableValue::Text("".into()),

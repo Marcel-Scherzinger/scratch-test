@@ -9,7 +9,7 @@ use std::{borrow::Cow, convert::Infallible, rc::Rc, str::FromStr};
 ///
 /// So it is useful to have a type that mimics this implicit conversions
 /// behaviour.
-#[derive(derive_more::Debug, Clone, derive_more::Display)]
+#[derive(derive_more::Debug, Clone, derive_more::Display, PartialEq)]
 pub enum SValue {
     #[debug("{_0:?}")]
     Text(Rc<str>),

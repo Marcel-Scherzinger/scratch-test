@@ -2,7 +2,7 @@ use crate::{
     ArgumentReporterName, DropdownSelection, Expression, RefBlock, Variable, interpret_json::List,
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum NoopStmtBlockKind {
     DataShowvariable,
     DataShowlist,
@@ -11,7 +11,7 @@ pub enum NoopStmtBlockKind {
     LooksShow,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum StmtBlockKind {
     DataSetvariableto {
         variable_to_set: Variable,
@@ -90,7 +90,7 @@ pub enum StmtBlockKind {
         item: Expression,
     },
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ExprBlockKind {
     ArgumentReporterStringNumber {
         value: ArgumentReporterName,
@@ -165,7 +165,7 @@ pub enum ExprBlockKind {
     },
     // SensingDayssince2000,
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum CmpBlockKind {
     OperatorAnd {
         operand1: RefBlock,
@@ -201,7 +201,7 @@ pub enum CmpBlockKind {
     },
 }
 
-#[derive(Debug, derive_more::From)]
+#[derive(Debug, derive_more::From, PartialEq)]
 pub enum BlockKind {
     EventWhenflagclicked,
     EventWhenkeypressed { key_option: DropdownSelection },

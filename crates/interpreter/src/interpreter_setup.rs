@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use model::{Id, ProjectDoc, Target};
 
-use crate::{InterpreterReport, RResult, State};
+use crate::{InterpreterReport, Limits, RResult, State};
 
 #[derive(Debug, thiserror::Error)]
 pub enum InterpreterError {
@@ -29,6 +29,7 @@ pub struct PrepareInterpreter {
     target_idx: usize,
     start_block_id: Id,
     answers: Rc<[model::VariableValue]>,
+    limits: Limits,
 }
 
 impl PrepareInterpreter {
@@ -43,6 +44,10 @@ impl PrepareInterpreter {
         self.answers = answers.into_iter().map(|t| t.into()).collect();
         self
     }
+    pub fn with_block_limit(mut self, max_stmts: usize) -> Self {
+        self.limits.max_stmts = max_stmts;
+        self
+    }
     pub fn start(self) -> InterpreterReport {
         let mut interpreter = Interpreter::<Starting> {
             result: Ok(()),
@@ -51,6 +56,7 @@ impl PrepareInterpreter {
                 self.target_idx,
                 self.start_block_id.clone(),
                 self.answers,
+                self.limits,
             ),
             phantom: Default::default(),
         };
@@ -79,6 +85,7 @@ impl InterpreterBuilder {
             doc: self.doc.clone(),
             target_idx: self.target_idx,
             start_block_id: self.start_block_id.clone(),
+            limits: Limits::new(),
         }
     }
 }

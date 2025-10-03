@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{RResult, RunError, Starting};
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::Display, PartialEq)]
 pub enum OutputAction {
     #[display("say")]
     Say,
@@ -14,7 +14,7 @@ pub enum OutputAction {
     ThinkFor(f64),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ActionEntry {
     Output { kind: OutputAction, msg: Rc<str> },
     Sleep(f64),

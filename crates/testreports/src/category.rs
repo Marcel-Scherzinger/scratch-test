@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use crate::{Message, Messages, TestCase, TestReport};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Category {
     pub(crate) kind: Cow<'static, str>,
     pub(crate) successes: Vec<TestCase>,

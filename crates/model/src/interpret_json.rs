@@ -3,7 +3,7 @@ use crate::{
     constants, scratch_expr::SValue,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Variable {
     name: String,
     id: Id,
@@ -20,7 +20,7 @@ impl Variable {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct List {
     name: String,
     id: Id,
@@ -37,7 +37,7 @@ impl List {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expression {
     Var(Variable),
     Blo(RefBlock),

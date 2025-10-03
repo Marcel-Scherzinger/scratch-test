@@ -1,6 +1,6 @@
 use crate::{Category, CategoryTests, Message, TestCase};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct TestReport {
     pub(crate) categories: Vec<Category>,
 }

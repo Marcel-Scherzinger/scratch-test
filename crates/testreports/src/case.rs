@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::{Messages, OutputListComparison, ProgramError, Text};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TestCase {
     pub(crate) messages: Messages<TestCase>,
     pub(crate) expected_output: Option<Rc<[model::VariableValue]>>,

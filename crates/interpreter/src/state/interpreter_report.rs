@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use crate::{ActionEntry, Interpreter, OutputAction, RResult, RunError, State};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct InterpreterReport {
     state: Rc<State>,
     run_error: Option<RunError>,
@@ -18,6 +18,11 @@ impl InterpreterReport {
 }
 
 impl InterpreterReport {
+    // TODO
+    pub fn requested_randoms(&self) -> Option<&[model::VariableValue]> {
+        None
+    }
+
     pub fn all_output_actions(&self) -> impl Iterator<Item = (&OutputAction, &Rc<str>)> {
         self.state.actions.iter().flat_map(|a| {
             if let ActionEntry::Output { kind, msg } = a {

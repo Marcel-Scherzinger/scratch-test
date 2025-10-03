@@ -5,7 +5,7 @@ use crate::{
 };
 
 /// A target is a sprite or the background
-#[derive(Debug, derive_getters::Getters)]
+#[derive(Debug, derive_getters::Getters, PartialEq)]
 pub struct Target {
     is_stage: bool,
     name: String,
@@ -50,7 +50,7 @@ impl Target {
     }
 }
 
-#[derive(Debug, derive_getters::Getters, Clone)]
+#[derive(Debug, derive_getters::Getters, Clone, PartialEq)]
 pub struct ProjectDoc {
     pub(crate) targets: Rc<[Target]>,
     pub(crate) semver: Option<Rc<str>>,

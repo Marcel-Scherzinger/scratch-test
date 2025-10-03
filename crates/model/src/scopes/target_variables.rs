@@ -4,7 +4,7 @@ use crate::scratch_expr::SValue as VariableValue;
 
 use crate::{Id, interpret_json::Variable};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct TargetVariables {
     /// map from variable id to name and saved value
     ///

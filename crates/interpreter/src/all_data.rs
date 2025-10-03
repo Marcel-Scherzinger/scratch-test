@@ -4,7 +4,7 @@ use model::{Id, List, Variable, VariableValue};
 
 use crate::{RResult, RunError};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct AllVariables {
     is_global: HashMap<Id, bool>,
     details: HashMap<Id, model::Variable>,
@@ -60,7 +60,7 @@ impl AllVariables {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct AllLists {
     is_global: HashMap<Id, bool>,
     details: HashMap<Id, model::List>,
