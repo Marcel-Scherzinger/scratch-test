@@ -10,7 +10,7 @@ pub struct TestCase {
     pub(crate) expected_output: Option<Rc<[model::VariableValue]>>,
     #[allow(unused)]
     pub(crate) data_lists: HashMap<Text, OutputListComparison>,
-    pub(crate) interpreter: interpreter::InterpreterReport,
+    pub(crate) interpreter: Box<interpreter::InterpreterReport>,
 }
 impl TestCase {
     pub fn set_list_comparison<P, E>(

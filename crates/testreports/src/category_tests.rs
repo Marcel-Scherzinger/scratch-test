@@ -68,7 +68,7 @@ impl CategoryTests {
         TestCase {
             data_lists: HashMap::new(),
             expected_output: None,
-            interpreter: finished,
+            interpreter: Box::new(finished),
             messages: Messages::new(),
         }
     }

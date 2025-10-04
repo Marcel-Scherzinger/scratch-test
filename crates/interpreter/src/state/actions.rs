@@ -23,12 +23,7 @@ pub enum ActionEntry {
 
 impl super::State {
     pub fn action_ask_question_and_wait(&mut self, question: impl Into<Rc<str>>) -> RResult<()> {
-        self.last_answer = self
-            .predefined_answers
-            .get(self.next_predefined_answer_pos)
-            .cloned()
-            .ok_or(RunError::QuestionAskedWithoutAnswer)?;
-        self.next_predefined_answer_pos += 1;
+        self.predefined_answers.ask_next()?;
         self.actions.push(ActionEntry::AskQuestion(question.into()));
         Ok(())
     }

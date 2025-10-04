@@ -1,4 +1,5 @@
 mod actions;
+mod answers;
 mod interpreter_report;
 mod stack;
 
@@ -11,7 +12,9 @@ use std::rc::Rc;
 
 use model::{BlockWrapper, Id, List, ScratchExpr, TargetBlocks, Variable};
 
-use crate::{AllLists, AllVariables, RResult, RunError, Starting};
+use crate::{
+    AllLists, AllVariables, RResult, RunError, Starting, state::answers::PredefinedAnswers,
+};
 
 #[derive(Debug, PartialEq)]
 pub struct Limits {
@@ -39,9 +42,7 @@ pub struct State {
     executed_stmts: usize,
     limits: Limits,
     actions: Vec<ActionEntry>,
-    predefined_answers: Rc<[model::VariableValue]>,
-    next_predefined_answer_pos: usize,
-    last_answer: model::VariableValue,
+    predefined_answers: PredefinedAnswers,
     warnings: Warnings,
     requested_randoms: Vec<model::VariableValue>,
     rng: rand::rngs::ThreadRng,
@@ -58,8 +59,6 @@ impl PartialEq for State {
             && self.limits == other.limits
             && self.actions == other.actions
             && self.predefined_answers == other.predefined_answers
-            && self.next_predefined_answer_pos == other.next_predefined_answer_pos
-            && self.last_answer == other.last_answer
             && self.warnings == other.warnings
             && self.requested_randoms == other.requested_randoms
     }
@@ -85,13 +84,11 @@ impl State {
             executed_stmts: 0,
             limits,
             actions: vec![],
-            predefined_answers: answers,
-            last_answer: model::VariableValue::Text("".into()),
+            predefined_answers: PredefinedAnswers::new(answers),
             requested_randoms: vec![],
             warnings: Warnings {
                 used_counter_loop: false,
             },
-            next_predefined_answer_pos: 0,
             rng: rand::rng(),
         }
     }
@@ -101,7 +98,7 @@ impl State {
         Ok(())
     }
     pub fn read_last_answer(&mut self) -> RResult<&model::VariableValue> {
-        Ok(&self.last_answer)
+        Ok(self.predefined_answers.last_answer())
     }
     pub fn warn_used_counter_loop(&mut self) -> RResult<()> {
         self.warnings.used_counter_loop = true;

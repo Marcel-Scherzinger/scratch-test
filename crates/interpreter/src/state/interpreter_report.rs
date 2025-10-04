@@ -2,17 +2,22 @@ use std::rc::Rc;
 
 use model::Id;
 
-use crate::{ActionEntry, Interpreter, OutputAction, RResult, RunError, State};
+use crate::{
+    ActionEntry, Interpreter, OutputAction, RResult, RunError, State,
+    state::answers::PredefinedAnswersReport,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct InterpreterReport {
     state: Rc<State>,
     run_error: Option<RunError>,
+    predefined_answers: PredefinedAnswersReport,
 }
 
 impl InterpreterReport {
     pub(crate) fn new(state: State, exit_status: Result<(), RunError>) -> Self {
         Self {
+            predefined_answers: state.predefined_answers.clone().into(),
             state: state.into(),
             run_error: exit_status.err(),
         }
@@ -37,8 +42,8 @@ impl InterpreterReport {
         self.all_output_actions().map(|(_, t)| t)
     }
 
-    pub fn predefined_answers(&self) -> &Rc<[model::VariableValue]> {
-        &self.state.predefined_answers
+    pub fn predefined_answers(&self) -> &PredefinedAnswersReport {
+        &self.predefined_answers
     }
     pub fn warn_used_counter_loop(&self) -> bool {
         *self.state.warnings.used_counter_loop()
