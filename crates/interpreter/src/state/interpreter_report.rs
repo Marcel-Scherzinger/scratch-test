@@ -4,7 +4,7 @@ use model::Id;
 
 use crate::{
     ActionEntry, Interpreter, OutputAction, RResult, RunError, State,
-    state::answers::PredefinedAnswersReport,
+    state::{answers::PredefinedAnswersReport, randoms::RandomNumbersReport},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -12,12 +12,14 @@ pub struct InterpreterReport {
     state: Rc<State>,
     run_error: Option<RunError>,
     predefined_answers: PredefinedAnswersReport,
+    requested_randoms: RandomNumbersReport,
 }
 
 impl InterpreterReport {
     pub(crate) fn new(state: State, exit_status: Result<(), RunError>) -> Self {
         Self {
             predefined_answers: state.predefined_answers.clone().into(),
+            requested_randoms: RandomNumbersReport::new(&state.requested_randoms),
             state: state.into(),
             run_error: exit_status.err(),
         }
@@ -25,8 +27,8 @@ impl InterpreterReport {
 }
 
 impl InterpreterReport {
-    pub fn requested_randoms(&self) -> &[model::VariableValue] {
-        &self.state.requested_randoms
+    pub fn requested_randoms(&self) -> &RandomNumbersReport {
+        &self.requested_randoms
     }
 
     pub fn all_output_actions(&self) -> impl Iterator<Item = (&OutputAction, &Rc<str>)> {

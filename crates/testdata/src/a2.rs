@@ -38,12 +38,12 @@ fn run_a_with(
     let mut test_case = tests.start(interp.prepare());
     let randoms = test_case.out().requested_randoms();
 
-    if randoms.len() % 2 == 1 {
+    if randoms.used_count() % 2 == 1 {
         tests.category_message(ODD_NUMBER_OF_RANDOMS);
     }
     use model::ScratchExpr;
     if randoms
-        .iter()
+        .iter_used()
         .any(|num| !(1..=6).contains(&num.as_int()) || num.is_float())
     {
         tests.category_message(RANDOMS_NOT_INT_1_TO_6);
@@ -65,7 +65,7 @@ fn run_a_with(
     };
 
     let sums: Vec<model::VariableValue> = randoms
-        .iter()
+        .iter_used()
         .tuples()
         .map(|(from, to)| model::VariableValue::Int(from.as_int() + to.as_int()))
         .collect();

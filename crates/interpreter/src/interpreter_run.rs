@@ -256,7 +256,7 @@ impl Interpreter<Starting> {
                         E::OperatorRandom { from, to } => {
                             let from = self.evaluate_expr(from)?;
                             let to = self.evaluate_expr(to)?;
-                            self.state.generate_random_number(&from, &to)
+                            self.state.request_random_number(&from, &to)
                         }
                         E::OperatorAdd { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?;

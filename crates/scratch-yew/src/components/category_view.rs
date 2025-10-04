@@ -51,7 +51,7 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
     });
 
     let requested_randoms = case.out().requested_randoms();
-    let requested_randoms = if !requested_randoms.is_empty() {
+    let requested_randoms = if requested_randoms.any_used() {
         html!(
             <tr>
                 <td>{"requested randoms: "}</td>
