@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 use model::{Id, List, Variable, VariableValue};
 
@@ -111,7 +111,17 @@ impl AllLists {
             .get_mut(l.id())
             .ok_or_else(|| RunError::AccessUnknownList(l.id().clone()))
     }
-    pub fn name_for_id(&self, l: &List) -> Option<&str> {
-        Some(self.details.get(l.id())?.name())
+    pub fn name_for_id(&self, id: &Id) -> Option<&str> {
+        Some(self.details.get(id)?.name())
+    }
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::VariableValue])> {
+        self.values.iter().flat_map(|(id, v)| {
+            Some((
+                id.clone(),
+                self.name_for_id(id)?,
+                self.is_global.get(id).cloned().unwrap_or_default(),
+                v.as_slice(),
+            ))
+        })
     }
 }

@@ -72,10 +72,23 @@ impl SValue {
     pub fn is_best_fit_with_float(&self, other: &SValue) -> bool {
         match (self, other) {
             (Self::Float(_), _) | (_, Self::Float(_)) => true,
-            (Self::Text(text), Self::Int(_)) if !text.contains(".") => false,
-            (Self::Int(_), Self::Text(text)) if !text.contains(".") => false,
             (Self::Int(_), Self::Int(_)) => false,
-            (Self::Text(_), _) | (_, Self::Text(_)) => true,
+            (Self::Text(text), _) | (_, Self::Text(text)) if !text.contains(".") => false,
+            (Self::Text(text), _) | (_, Self::Text(text)) => true,
+        }
+    }
+    pub fn is_float(&self) -> bool {
+        match self {
+            Self::Float(_) => true,
+            Self::Int(_) => false,
+            Self::Text(text) => text.contains(".") && text.parse::<f64>().is_ok(),
+        }
+    }
+    pub fn is_int(&self) -> bool {
+        match self {
+            Self::Float(_) => false,
+            Self::Int(_) => true,
+            Self::Text(text) => text.parse::<i64>().is_ok(),
         }
     }
 }

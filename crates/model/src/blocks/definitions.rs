@@ -265,6 +265,11 @@ pub(super) fn parse_kind(
             num2: getter!(inputs."NUM2" as expression)?,
         }
         .into(),
+        "operator_random" => ExprBlockKind::OperatorRandom {
+            from: getter!(inputs."FROM" as expression)?,
+            to: getter!(inputs."TO" as expression)?,
+        }
+        .into(),
         "control_wait" => StmtBlockKind::ControlWait {
             duration: getter!(inputs."DURATION" as expression)?,
         }

@@ -31,24 +31,38 @@ impl<Level> std::fmt::Debug for Message<Level> {
 }
 
 impl<Level> Message<Level> {
-    pub const fn hint(msg: &'static str) -> Self {
+    pub const fn chint(msg: &'static str) -> Self {
         Self {
             kind: MessageKind::Hint,
             msg: Cow::Borrowed(msg),
             phantom: std::marker::PhantomData,
         }
     }
-    pub const fn hint_to_fix(msg: &'static str) -> Self {
+    pub const fn chint_to_fix(msg: &'static str) -> Self {
         Self {
             kind: MessageKind::HintToFix,
             msg: Cow::Borrowed(msg),
             phantom: std::marker::PhantomData,
         }
     }
-    pub const fn warning(msg: &'static str) -> Self {
+    pub const fn cwarning(msg: &'static str) -> Self {
         Self {
             kind: MessageKind::Warning,
             msg: Cow::Borrowed(msg),
+            phantom: std::marker::PhantomData,
+        }
+    }
+    pub fn warning(msg: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            kind: MessageKind::Warning,
+            msg: msg.into(),
+            phantom: std::marker::PhantomData,
+        }
+    }
+    pub fn hint(msg: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            kind: MessageKind::Hint,
+            msg: msg.into(),
             phantom: std::marker::PhantomData,
         }
     }

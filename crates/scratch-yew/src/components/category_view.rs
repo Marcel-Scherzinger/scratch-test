@@ -36,6 +36,20 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
     } else {
         html!()
     };
+
+    let differing_lists = case.differing_list_values().map(|(name, diff)| {
+        html!(<>
+            <tr>
+                <td>{"list."}{name}{".program"}</td>
+                <td>{format!("{:?}", diff.program())}</td>
+            </tr>
+            <tr>
+                <td>{"list."}{name}{".expected"}</td>
+                <td>{format!("{:?}", diff.expected())}</td>
+            </tr>
+            </>)
+    });
+
     let requested_randoms = case.out().requested_randoms();
     let requested_randoms = if !requested_randoms.is_empty() {
         html!(
@@ -83,6 +97,7 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
                     {requested_randoms}
                     {program_output}
                     {expected_output}
+                    {for differing_lists}
                     {abnormal_termination}
                 </table>
             </div>

@@ -1,5 +1,7 @@
 use std::rc::Rc;
 
+use model::Id;
+
 use crate::{ActionEntry, Interpreter, OutputAction, RResult, RunError, State};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -43,5 +45,9 @@ impl InterpreterReport {
     }
     pub fn run_error(&self) -> Option<&RunError> {
         self.run_error.as_ref()
+    }
+
+    pub fn all_lists(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::VariableValue])> {
+        self.state.all_lists.iter()
     }
 }
