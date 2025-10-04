@@ -15,6 +15,7 @@ fn run_single(file: PathBuf, exercise_number: u8, exercise_part: ExercisePart) {
     let tester: std::rc::Rc<dyn ExerciseTest> = match (exercise_number, exercise_part) {
         (1, ExercisePart::A) => std::rc::Rc::new(testdata::A1a),
         (1, ExercisePart::B) => std::rc::Rc::new(testdata::A1b),
+        (2, ExercisePart::A) => std::rc::Rc::new(testdata::A2a),
         _ => todo!(),
     };
 

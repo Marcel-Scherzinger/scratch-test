@@ -10,6 +10,8 @@ pub enum SupportedExercise {
     A1a,
     #[display("A1b")]
     A1b,
+    #[display("A2a")]
+    A2a,
 }
 
 impl SupportedExercise {
@@ -18,6 +20,7 @@ impl SupportedExercise {
         match self {
             SupportedExercise::A1a => Rc::new(testdata::A1a),
             SupportedExercise::A1b => Rc::new(testdata::A1b),
+            SupportedExercise::A2a => Rc::new(testdata::A2a),
         }
     }
 }
@@ -28,6 +31,7 @@ impl std::str::FromStr for SupportedExercise {
         Ok(match s.to_lowercase().as_str() {
             "1a" | "a1a" => Self::A1a,
             "1b" | "a1b" => Self::A1b,
+            "2a" | "a2a" => Self::A2a,
             _ => return Err(()),
         })
     }
