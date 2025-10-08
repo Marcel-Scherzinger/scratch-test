@@ -17,15 +17,15 @@ type Text = Rc<str>;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct OutputListComparison {
-    program: Rc<[model::VariableValue]>,
-    expected: Rc<[model::VariableValue]>,
+    program: Rc<[model::SValue]>,
+    expected: Rc<[model::SValue]>,
 }
 
 impl OutputListComparison {
-    pub fn program(&self) -> &Rc<[model::VariableValue]> {
+    pub fn program(&self) -> &Rc<[model::SValue]> {
         &self.program
     }
-    pub fn expected(&self) -> &Rc<[model::VariableValue]> {
+    pub fn expected(&self) -> &Rc<[model::SValue]> {
         &self.expected
     }
 }

@@ -54,7 +54,7 @@ impl InterpreterReport {
         self.run_error.as_ref()
     }
 
-    pub fn all_lists(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::VariableValue])> {
+    pub fn all_lists(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::SValue])> {
         self.state.all_lists.iter()
     }
 }

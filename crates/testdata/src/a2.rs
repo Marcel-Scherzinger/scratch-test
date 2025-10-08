@@ -49,16 +49,16 @@ fn run_a_with(interp: &interpreter::InterpreterBuilder, tests: &mut CategoryTest
         let wuerfe = test_case.get_required_list("Würfe")?;
         let haeufigkeiten = test_case.get_required_list("Häufigkeiten")?;
 
-        let sums: Vec<model::VariableValue> = randoms
+        let sums: Vec<model::SValue> = randoms
             .iter_used()
             .tuples()
-            .map(|(from, to)| model::VariableValue::Int(from.as_int() + to.as_int()))
+            .map(|(from, to)| model::SValue::Int(from.as_int() + to.as_int()))
             .collect();
 
         let dist: HashMap<i64, usize> = sums.iter().map(|s| s.as_int()).counts();
         let distribution = (1..=12)
             .map(|index| dist.get(&index).cloned().unwrap_or(0) as i64)
-            .map(model::VariableValue::Int)
+            .map(model::SValue::Int)
             .collect_vec();
 
         if wuerfe

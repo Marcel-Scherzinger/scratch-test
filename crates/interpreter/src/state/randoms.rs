@@ -3,7 +3,7 @@ use model::ScratchExpr;
 
 #[derive(Debug)]
 pub(crate) struct RandomNumbers {
-    randoms: Vec<model::VariableValue>,
+    randoms: Vec<model::SValue>,
     provided_count: usize,
     next_pos: usize,
     rng: rand::rngs::ThreadRng,
@@ -22,7 +22,7 @@ impl RandomNumbers {
     }
     // before making this public deal with the case when requested bounds don't match provided
     // random
-    fn new_with(randoms: impl Into<Vec<model::VariableValue>>) -> Self {
+    fn new_with(randoms: impl Into<Vec<model::SValue>>) -> Self {
         let randoms = randoms.into();
         Self {
             rng: rand::rng(),
@@ -35,24 +35,24 @@ impl RandomNumbers {
     // random
     fn new_from<T>(randoms: impl IntoIterator<Item = T>) -> Self
     where
-        T: Into<model::VariableValue>,
+        T: Into<model::SValue>,
     {
         Self::new_with(randoms.into_iter().map(|v| v.into()).collect_vec())
     }
 
     pub fn request(
         &mut self,
-        from: &model::VariableValue,
-        to: &model::VariableValue,
-    ) -> model::VariableValue {
+        from: &model::SValue,
+        to: &model::SValue,
+    ) -> model::SValue {
         use rand::Rng;
 
         let random = if from.is_best_fit_with_float(to) {
             let (from, to) = (from.as_float(), to.as_float());
-            model::VariableValue::Float(self.rng.random_range(from..=to))
+            model::SValue::Float(self.rng.random_range(from..=to))
         } else {
             let (from, to) = (from.as_int(), to.as_int());
-            model::VariableValue::Int(self.rng.random_range(from..=to))
+            model::SValue::Int(self.rng.random_range(from..=to))
         };
 
         self.randoms.push(random.clone());
@@ -62,7 +62,7 @@ impl RandomNumbers {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct RandomNumbersReport {
-    randoms: Vec<model::VariableValue>,
+    randoms: Vec<model::SValue>,
     provided_count: usize,
     next_pos: usize,
 }
@@ -74,7 +74,7 @@ impl RandomNumbersReport {
             next_pos: rn.next_pos,
         }
     }
-    pub fn iter_used(&self) -> impl Iterator<Item = &model::VariableValue> {
+    pub fn iter_used(&self) -> impl Iterator<Item = &model::SValue> {
         self.randoms.iter()
     }
     pub fn used_count(&self) -> usize {

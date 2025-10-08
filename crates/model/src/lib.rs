@@ -24,6 +24,7 @@ pub use scopes::*;
 pub use scratch_expr::{IntegerOutOfBounds, ScratchExpr};
 
 pub use scratch_expr::SValue as VariableValue;
+pub use scratch_expr::SValue;
 
 pub type Id = Rc<str>;
 pub type OpcodeNum = u64;

@@ -54,7 +54,7 @@ impl State {
         doc: model::ProjectDoc,
         target_idx: usize,
         green_flag_id: Id,
-        answers: Rc<[model::VariableValue]>,
+        answers: Rc<[model::SValue]>,
         limits: Limits,
     ) -> Self {
         let all_variables = AllVariables::new(&doc, target_idx);
@@ -81,7 +81,7 @@ impl State {
     pub fn check_limits(&mut self) -> RResult<()> {
         Ok(())
     }
-    pub fn read_last_answer(&mut self) -> RResult<&model::VariableValue> {
+    pub fn read_last_answer(&mut self) -> RResult<&model::SValue> {
         Ok(self.predefined_answers.last_answer())
     }
     pub fn warn_used_counter_loop(&mut self) -> RResult<()> {
@@ -117,38 +117,38 @@ impl State {
 
     pub fn request_random_number(
         &mut self,
-        from: &model::VariableValue,
-        to: &model::VariableValue,
-    ) -> model::VariableValue {
+        from: &model::SValue,
+        to: &model::SValue,
+    ) -> model::SValue {
         self.requested_randoms.request(from, to)
     }
     pub fn set_variable(
         &mut self,
         variable: &Variable,
-        value: model::VariableValue,
+        value: model::SValue,
     ) -> RResult<()> {
         let mut v = self.all_variables.get_mut(variable)?;
         log::debug!("set variable {} to {value:?}", variable.name());
         *v = value;
         Ok(())
     }
-    pub fn get_variable(&mut self, variable: &Variable) -> RResult<model::VariableValue> {
+    pub fn get_variable(&mut self, variable: &Variable) -> RResult<model::SValue> {
         self.all_variables.get(variable).cloned()
     }
-    pub fn get_list_value(&mut self, list: &List) -> RResult<model::VariableValue> {
+    pub fn get_list_value(&mut self, list: &List) -> RResult<model::SValue> {
         let elements = self.all_lists.get(list)?;
         use itertools::Itertools;
-        Ok(model::VariableValue::Text(
+        Ok(model::SValue::Text(
             elements.iter().map(|e| e.as_text()).join(" ").into(),
         ))
     }
-    pub fn get_list_elements(&mut self, list: &List) -> RResult<&Vec<model::VariableValue>> {
+    pub fn get_list_elements(&mut self, list: &List) -> RResult<&Vec<model::SValue>> {
         self.all_lists.get(list)
     }
     pub fn get_mut_list_elements(
         &mut self,
         list: &List,
-    ) -> RResult<&mut Vec<model::VariableValue>> {
+    ) -> RResult<&mut Vec<model::SValue>> {
         self.all_lists.get_mut(list)
     }
 }

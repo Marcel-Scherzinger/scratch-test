@@ -240,7 +240,7 @@ impl Interpreter<Starting> {
         Ok(())
     }
 
-    fn evaluate_expr(&mut self, expr: &model::Expression) -> RResult<model::VariableValue> {
+    fn evaluate_expr(&mut self, expr: &model::Expression) -> RResult<model::SValue> {
         use model::Expression as E;
         log::trace!("evaluate expr: {expr:?}");
         match expr {
@@ -250,7 +250,7 @@ impl Interpreter<Starting> {
                 let b = self.state.get_expression_block(id)?;
                 use model::BlockKind as B;
                 use model::ExprBlockKind as E;
-                use model::VariableValue as V;
+                use model::SValue as V;
                 if let B::Expr(e) = b.inner() {
                     Ok(match e {
                         E::OperatorRandom { from, to } => {
@@ -357,9 +357,9 @@ impl Interpreter<Starting> {
                             if index > 0 {
                                 list.get((index - 1) as usize)
                                     .cloned()
-                                    .unwrap_or(model::VariableValue::Text("".into()))
+                                    .unwrap_or(model::SValue::Text("".into()))
                             } else {
-                                model::VariableValue::Text("".into())
+                                model::SValue::Text("".into())
                             }
                         }
                         E::SensingAnswer => self.state.read_last_answer()?.clone(),

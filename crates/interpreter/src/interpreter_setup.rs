@@ -28,16 +28,16 @@ pub struct PrepareInterpreter {
     doc: ProjectDoc,
     target_idx: usize,
     start_block_id: Id,
-    answers: Rc<[model::VariableValue]>,
+    answers: Rc<[model::SValue]>,
     limits: Limits,
 }
 
 impl PrepareInterpreter {
-    pub fn with_answers_inner(mut self, answers: Rc<[model::VariableValue]>) -> Self {
+    pub fn with_answers_inner(mut self, answers: Rc<[model::SValue]>) -> Self {
         self.answers = answers;
         self
     }
-    pub fn with_answers<T: Into<model::VariableValue>>(
+    pub fn with_answers<T: Into<model::SValue>>(
         mut self,
         answers: impl IntoIterator<Item = T>,
     ) -> Self {

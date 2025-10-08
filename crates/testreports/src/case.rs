@@ -10,7 +10,7 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCase {
     pub(crate) messages: MessageHub,
-    pub(crate) expected_output: Option<Rc<[model::VariableValue]>>,
+    pub(crate) expected_output: Option<Rc<[model::SValue]>>,
     #[allow(unused)]
     pub(crate) data_lists: HashMap<Text, OutputListComparison>,
     pub(crate) interpreter: Rc<interpreter::InterpreterReport>,
@@ -23,8 +23,8 @@ impl TestCase {
         expected: impl IntoIterator<Item = E>,
     ) -> &mut Self
     where
-        P: Into<model::VariableValue>,
-        E: Into<model::VariableValue>,
+        P: Into<model::SValue>,
+        E: Into<model::SValue>,
     {
         self.data_lists.insert(
             listname.into(),
@@ -41,14 +41,14 @@ impl TestCase {
     pub fn out(&self) -> &Rc<interpreter::InterpreterReport> {
         &self.interpreter
     }
-    pub fn set_expected_output<T: Into<model::VariableValue>>(
+    pub fn set_expected_output<T: Into<model::SValue>>(
         &mut self,
         eo: impl IntoIterator<Item = T>,
     ) -> &mut Self {
         self.expected_output = Some(eo.into_iter().map(|s| s.into()).collect());
         self
     }
-    pub fn expected_output(&self) -> &Option<Rc<[model::VariableValue]>> {
+    pub fn expected_output(&self) -> &Option<Rc<[model::SValue]>> {
         &self.expected_output
     }
     pub fn local_messages(&self) -> &Messages<TestCase> {
@@ -81,7 +81,7 @@ impl TestCase {
     pub fn get_required_list(
         &self,
         name: &str,
-    ) -> Result<&[model::VariableValue], Message<TestReport>> {
+    ) -> Result<&[model::SValue], Message<TestReport>> {
         let mut candidates = self
             .out()
             .all_lists()

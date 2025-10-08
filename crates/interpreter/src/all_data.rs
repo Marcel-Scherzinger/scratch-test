@@ -1,6 +1,6 @@
 use std::{collections::HashMap, rc::Rc};
 
-use model::{Id, List, Variable, VariableValue};
+use model::{Id, List, Variable, SValue};
 
 use crate::{RResult, RunError};
 
@@ -8,7 +8,7 @@ use crate::{RResult, RunError};
 pub struct AllVariables {
     is_global: HashMap<Id, bool>,
     details: HashMap<Id, model::Variable>,
-    values: HashMap<Id, model::VariableValue>,
+    values: HashMap<Id, model::SValue>,
 }
 impl AllVariables {
     pub(crate) fn new(doc: &model::ProjectDoc, target_idx: usize) -> Self {
@@ -45,12 +45,12 @@ impl AllVariables {
 }
 
 impl AllVariables {
-    pub fn get(&self, v: &Variable) -> RResult<&VariableValue> {
+    pub fn get(&self, v: &Variable) -> RResult<&SValue> {
         self.values
             .get(v.id())
             .ok_or_else(|| RunError::AccessUnknownVariable(v.id().clone()))
     }
-    pub fn get_mut(&mut self, v: &Variable) -> RResult<&mut VariableValue> {
+    pub fn get_mut(&mut self, v: &Variable) -> RResult<&mut SValue> {
         self.values
             .get_mut(v.id())
             .ok_or_else(|| RunError::AccessUnknownVariable(v.id().clone()))
@@ -64,7 +64,7 @@ impl AllVariables {
 pub struct AllLists {
     is_global: HashMap<Id, bool>,
     details: HashMap<Id, model::List>,
-    values: HashMap<Id, Vec<model::VariableValue>>,
+    values: HashMap<Id, Vec<model::SValue>>,
 }
 impl AllLists {
     pub(crate) fn new(doc: &model::ProjectDoc, target_idx: usize) -> Self {
@@ -101,12 +101,12 @@ impl AllLists {
 }
 
 impl AllLists {
-    pub fn get(&self, l: &List) -> RResult<&Vec<VariableValue>> {
+    pub fn get(&self, l: &List) -> RResult<&Vec<SValue>> {
         self.values
             .get(l.id())
             .ok_or_else(|| RunError::AccessUnknownList(l.id().clone()))
     }
-    pub fn get_mut(&mut self, l: &List) -> RResult<&mut Vec<VariableValue>> {
+    pub fn get_mut(&mut self, l: &List) -> RResult<&mut Vec<SValue>> {
         self.values
             .get_mut(l.id())
             .ok_or_else(|| RunError::AccessUnknownList(l.id().clone()))
@@ -114,7 +114,7 @@ impl AllLists {
     pub fn name_for_id(&self, id: &Id) -> Option<&str> {
         Some(self.details.get(id)?.name())
     }
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::VariableValue])> {
+    pub(crate) fn iter(&self) -> impl Iterator<Item = (Id, &str, bool, &[model::SValue])> {
         self.values.iter().flat_map(|(id, v)| {
             Some((
                 id.clone(),
