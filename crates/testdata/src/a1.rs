@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use testreports::{CategoryTests, TestCase, TestReport};
+use testreports::{CategoryTests, MessageAdder, TestReport};
 
 use crate::defs::*;
 
@@ -25,7 +25,7 @@ impl ExerciseTest for A1a {
     fn run(&self, interp: &interpreter::InterpreterBuilder) -> TestReport {
         let mut report = TestReport::new();
         report.add_category("", |tests| {
-            tests.add_result_of(|tests| run_with(interp, tests, Some((1, 5))));
+            run_with(interp, tests, Some((1, 5)));
         });
         report
     }
@@ -39,24 +39,24 @@ impl ExerciseTest for A1b {
         let mut report = TestReport::new();
 
         report.add_category("Beispiel", |tests| {
-            tests.add_result_of(|tests| run_with(interp, tests, Some((1, 5))));
+            run_with(interp, tests, Some((1, 5)));
         });
 
         report.add_category("Beginn bei 0", |tests| {
             for last in 1..=20 {
-                tests.add_result_of(|tests| run_with(interp, tests, Some((0, last))));
+                run_with(interp, tests, Some((0, last)));
             }
         });
 
         report.add_category("Negativer Beginn", |tests| {
             for last in 1..=20 {
-                tests.add_result_of(|tests| run_with(interp, tests, Some((-10, last))));
+                run_with(interp, tests, Some((-10, last)));
             }
         });
 
         report.add_category("Start = Ende", |tests| {
             for border in 1..=20 {
-                tests.add_result_of(|tests| run_with(interp, tests, Some((border, border))));
+                run_with(interp, tests, Some((border, border)));
             }
         });
 
@@ -68,47 +68,51 @@ fn run_with(
     interp: &interpreter::InterpreterBuilder,
     tests: &mut CategoryTests,
     first_n_last: Option<(i64, i64)>,
-) -> Result<TestCase, TestCase> {
+) {
     let inputs = first_n_last
         .map(|(first, last)| vec![first, last])
         .unwrap_or_default();
     let (first, last) = first_n_last.unwrap_or((1, 5));
 
-    let mut test_case = tests.start(interp.prepare().with_answers(inputs));
-    let error = test_case.program_error();
+    tests.add_test_case(
+        interp.prepare().with_answers(inputs),
+        |case, messages, out| {
+            let error = case.program_error();
 
-    let expected = (first..=last).map(|i| 2 * i * i).sum::<i64>().to_string();
+            let expected = (first..=last).map(|i| 2 * i * i).sum::<i64>().to_string();
 
-    let output: Vec<Rc<str>> = test_case.out().all_output_texts().cloned().collect();
+            let output: Vec<Rc<str>> = out.all_output_texts().cloned().collect();
 
-    if test_case.out().warn_used_counter_loop() {
-        tests.global_message(WARN_COUNTER_LOOP);
-    }
-
-    if error.is_some() {
-        test_case.set_expected_output([expected]);
-        return Err(test_case);
-    }
-    if let Some(last) = output.last()
-        && error.is_none()
-    {
-        if last.as_ref() == expected.as_str() {
-            return Ok(test_case);
-        }
-        let last = last.trim_end_matches(|s: char| s.is_ascii_punctuation());
-
-        if let Some(prefix) = last.strip_suffix(&expected) {
-            let last_symbol = prefix.chars().last().unwrap_or_default();
-            if last_symbol == ' ' {
-                return Ok(test_case);
+            if out.warn_used_counter_loop() {
+                messages.notify(WARN_COUNTER_LOOP);
             }
-            if !last_symbol.is_ascii_digit() {
-                tests.global_message(HINT_NO_EXTRA_SPACE);
-                // some text or punctuation as prefix
-                return Ok(test_case);
+
+            if error.is_some() {
+                case.set_expected_output([expected.clone()]);
+                Err(())?;
             }
-        }
-    }
-    test_case.set_expected_output([expected]);
-    Err(test_case)
+            if let Some(last) = output.last()
+                && error.is_none()
+            {
+                if last.as_ref() == expected.as_str() {
+                    return Ok(());
+                }
+                let last = last.trim_end_matches(|s: char| s.is_ascii_punctuation());
+
+                if let Some(prefix) = last.strip_suffix(&expected) {
+                    let last_symbol = prefix.chars().last().unwrap_or_default();
+                    if last_symbol == ' ' {
+                        return Ok(());
+                    }
+                    if !last_symbol.is_ascii_digit() {
+                        messages.notify(HINT_NO_EXTRA_SPACE);
+                        // some text or punctuation as prefix
+                        return Ok(());
+                    }
+                }
+            }
+            case.set_expected_output([expected]);
+            Err(().into())
+        },
+    );
 }

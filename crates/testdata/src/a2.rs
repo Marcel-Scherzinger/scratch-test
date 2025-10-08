@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use testreports::{Category, CategoryTests, Message, TestCase, TestReport};
+use testreports::{Category, CategoryTests, Message, MessageAdder, TestReport};
 
 use crate::defs::*;
 
@@ -22,84 +22,69 @@ impl ExerciseTest for A2a {
         let mut report = TestReport::new();
         report.add_category("", |tests| {
             for _ in 1..=20 {
-                tests.add_result_of(|tests| run_a_with(interp, tests));
+                run_a_with(interp, tests);
             }
         });
         report
     }
 }
 
-fn run_a_with(
-    interp: &interpreter::InterpreterBuilder,
-    tests: &mut CategoryTests,
-) -> Result<TestCase, TestCase> {
+fn run_a_with(interp: &interpreter::InterpreterBuilder, tests: &mut CategoryTests) {
     use itertools::Itertools;
 
-    let mut test_case = tests.start(interp.prepare());
-    let randoms = test_case.out().requested_randoms();
+    tests.add_test_case(interp.prepare(), |test_case, messages, out| {
+        let randoms = out.requested_randoms();
 
-    if randoms.used_count() % 2 == 1 {
-        tests.category_message(ODD_NUMBER_OF_RANDOMS);
-    }
-    use model::ScratchExpr;
-    if randoms
-        .iter_used()
-        .any(|num| !(1..=6).contains(&num.as_int()) || num.is_float())
-    {
-        tests.category_message(RANDOMS_NOT_INT_1_TO_6);
-    }
-
-    let wuerfe = match test_case.get_required_list("Würfe") {
-        Ok(w) => w,
-        Err(msg) => {
-            tests.global_message(msg);
-            return Err(test_case);
+        if randoms.used_count() % 2 == 1 {
+            messages.notify(ODD_NUMBER_OF_RANDOMS);
         }
-    };
-    let haeufigkeiten = match test_case.get_required_list("Häufigkeiten") {
-        Ok(w) => w,
-        Err(msg) => {
-            tests.global_message(msg);
-            return Err(test_case);
+        use model::ScratchExpr;
+        if randoms
+            .iter_used()
+            .any(|num| !(1..=6).contains(&num.as_int()) || num.is_float())
+        {
+            messages.notify(RANDOMS_NOT_INT_1_TO_6);
         }
-    };
 
-    let sums: Vec<model::VariableValue> = randoms
-        .iter_used()
-        .tuples()
-        .map(|(from, to)| model::VariableValue::Int(from.as_int() + to.as_int()))
-        .collect();
+        let wuerfe = test_case.get_required_list("Würfe")?;
+        let haeufigkeiten = test_case.get_required_list("Häufigkeiten")?;
 
-    let dist: HashMap<i64, usize> = sums.iter().map(|s| s.as_int()).counts();
-    let distribution = (1..=12)
-        .map(|index| dist.get(&index).cloned().unwrap_or(0) as i64)
-        .map(model::VariableValue::Int)
-        .collect_vec();
+        let sums: Vec<model::VariableValue> = randoms
+            .iter_used()
+            .tuples()
+            .map(|(from, to)| model::VariableValue::Int(from.as_int() + to.as_int()))
+            .collect();
 
-    if wuerfe
-        .iter()
-        .any(|v| !v.is_int() || !(1..=12).contains(&v.as_int()))
-    {
-        tests.category_message(WUERFE_NOT_ONLY_1_TO_12);
-    }
-    let mut failed = false;
-    let haeufigkeiten = haeufigkeiten.to_vec();
+        let dist: HashMap<i64, usize> = sums.iter().map(|s| s.as_int()).counts();
+        let distribution = (1..=12)
+            .map(|index| dist.get(&index).cloned().unwrap_or(0) as i64)
+            .map(model::VariableValue::Int)
+            .collect_vec();
 
-    if format!("{sums:?}") != format!("{wuerfe:?}") {
-        let wuerfe = wuerfe.to_vec();
-        test_case.set_list_comparison("Würfe", wuerfe, sums);
-        failed = true;
-    }
+        if wuerfe
+            .iter()
+            .any(|v| !v.is_int() || !(1..=12).contains(&v.as_int()))
+        {
+            messages.notify(WUERFE_NOT_ONLY_1_TO_12);
+        }
+        let mut failed = false;
+        let haeufigkeiten = haeufigkeiten.to_vec();
 
-    if format!("{distribution:?}") != format!("{haeufigkeiten:?}") {
-        test_case.set_list_comparison("Häufigkeiten", haeufigkeiten, distribution);
-        failed = true;
-    }
+        if format!("{sums:?}") != format!("{wuerfe:?}") {
+            let wuerfe = wuerfe.to_vec();
+            test_case.set_list_comparison("Würfe", wuerfe, sums);
+            failed = true;
+        }
 
-    let error = test_case.program_error();
-    if error.is_some() || failed {
-        Err(test_case)
-    } else {
-        Ok(test_case)
-    }
+        if format!("{distribution:?}") != format!("{haeufigkeiten:?}") {
+            test_case.set_list_comparison("Häufigkeiten", haeufigkeiten, distribution);
+            failed = true;
+        }
+
+        let error = test_case.program_error();
+        if error.is_some() || failed {
+            Err(())?;
+        }
+        Ok(())
+    });
 }

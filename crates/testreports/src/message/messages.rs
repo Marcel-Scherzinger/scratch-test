@@ -1,5 +1,6 @@
 use std::{borrow::Cow, collections::BTreeSet};
 
+use super::MessageAdder;
 use crate::{Message, MessageKind};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -37,5 +38,16 @@ impl<Level> Messages<Level> {
     }
     pub fn iter(&self) -> impl Iterator<Item = &Message<Level>> {
         self.0.iter()
+    }
+    /// This will take all messages from other and moves them
+    /// (without creating duplicates) into self
+    pub(crate) fn take_and_remove_from(&mut self, other: &mut Self) {
+        self.0.append(&mut other.0);
+    }
+}
+
+impl<Level> MessageAdder<Level> for Messages<Level> {
+    fn notify(&mut self, message: Message<Level>) {
+        self.add(message);
     }
 }

@@ -7,7 +7,7 @@ mod report;
 pub use case::TestCase;
 pub use category::Category;
 pub use category_tests::CategoryTests;
-pub use message::{Message, MessageKind};
+pub use message::{Message, MessageAdder, MessageHub, MessageKind};
 pub use report::TestReport;
 
 use std::rc::Rc;

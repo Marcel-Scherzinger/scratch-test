@@ -2,15 +2,18 @@ use std::{collections::HashMap, rc::Rc};
 
 use itertools::Itertools;
 
-use crate::{Message, Messages, OutputListComparison, ProgramError, TestReport, Text};
+use crate::{
+    Message, MessageAdder, MessageHub, Messages, OutputListComparison, ProgramError, TestReport,
+    Text,
+};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TestCase {
-    pub(crate) messages: Messages<TestCase>,
+    pub(crate) messages: MessageHub,
     pub(crate) expected_output: Option<Rc<[model::VariableValue]>>,
     #[allow(unused)]
     pub(crate) data_lists: HashMap<Text, OutputListComparison>,
-    pub(crate) interpreter: Box<interpreter::InterpreterReport>,
+    pub(crate) interpreter: Rc<interpreter::InterpreterReport>,
 }
 impl TestCase {
     pub fn set_list_comparison<P, E>(
@@ -35,7 +38,7 @@ impl TestCase {
     pub fn differing_list_values(&self) -> impl Iterator<Item = (&Text, &OutputListComparison)> {
         self.data_lists.iter()
     }
-    pub fn out(&self) -> &interpreter::InterpreterReport {
+    pub fn out(&self) -> &Rc<interpreter::InterpreterReport> {
         &self.interpreter
     }
     pub fn set_expected_output<T: Into<model::VariableValue>>(
@@ -49,7 +52,7 @@ impl TestCase {
         &self.expected_output
     }
     pub fn local_messages(&self) -> &Messages<TestCase> {
-        &self.messages
+        &self.messages.case
     }
     pub fn program_error(&self) -> Option<ProgramError> {
         use interpreter::RunError as E;
@@ -92,5 +95,14 @@ impl TestCase {
         candidates
             .exactly_one()
             .map_err(|_| Message::warning(format!("list name {name:?} is not unique")))
+    }
+}
+
+impl<L> MessageAdder<L> for TestCase
+where
+    MessageHub: MessageAdder<L>,
+{
+    fn notify(&mut self, message: Message<L>) {
+        self.messages.notify(message);
     }
 }

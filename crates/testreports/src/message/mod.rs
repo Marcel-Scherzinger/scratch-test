@@ -1,8 +1,12 @@
+mod adder;
+mod hub;
 mod messages;
 mod traits;
 
 use std::{borrow::Cow, hash::Hash};
 
+pub use adder::MessageAdder;
+pub use hub::MessageHub;
 pub use messages::Messages;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash, derive_more::Display)]

@@ -16,13 +16,12 @@ impl TestReport {
     ) -> &mut Self {
         let mut category_tests = CategoryTests::new();
         run(&mut category_tests);
-        let (successes, failures, messages, global_messages) = category_tests.take();
+        let (successes, failures, messages) = category_tests.take_compressed();
         self.categories.push(Category {
             kind: kind.into(),
             successes,
             failures,
             messages,
-            global_messages,
         });
         self
     }
@@ -39,7 +38,7 @@ impl TestReport {
         use itertools::Itertools;
         self.categories
             .iter()
-            .flat_map(|c| c.global_messages.iter())
+            .flat_map(|c| c.messages.report().iter())
             .unique()
     }
 }
