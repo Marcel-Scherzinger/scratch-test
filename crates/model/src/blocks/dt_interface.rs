@@ -1,5 +1,12 @@
 use crate::{BlockKind, interpret_json::FormatError};
 
+#[allow(unused)]
+pub(crate) trait GetOpcodeUnit {
+    type Opcode;
+
+    fn get_opcode(&self) -> Self::Opcode;
+}
+
 pub(crate) trait FromJsonBlock {
     fn from_json_block(
         opcode: &str,

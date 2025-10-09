@@ -2,7 +2,7 @@ use crate::{DropdownSelection, Expression, List, RefBlock, Variable};
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
-    pub enum StmtBlockKind:
+    pub enum StmtBlockKind (StmtBlockKindUnit):
 
     "data_setvariableto" => DataSetvariableto {
         (field) variable: Variable,
@@ -78,5 +78,5 @@ super::define_blocks! {
     "data_addtolist" => DataAddtolist {
         (field) list: List,
         item: Expression,
-    }
+    },
 }

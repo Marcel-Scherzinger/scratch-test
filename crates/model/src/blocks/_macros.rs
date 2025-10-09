@@ -1,7 +1,7 @@
 macro_rules! define_blocks {
     (
         $(#[$tmeta: meta])*
-        $tvis: vis enum $tname: ident :
+        $tvis: vis enum $tname: ident  $(($unit: ident))?:
 
         $(
             $(#[$vmeta: meta])*
@@ -19,7 +19,7 @@ macro_rules! define_blocks {
             skip => {
                 $(
                     $(#[$skipvmeta: meta])*
-                    $skipvar: ident $({
+                    ($skipopcode: literal) $skipvar: ident $({
                         $(
                             $(#[$skipfmeta: meta])*
                             $skipfname : ident : $skipftype: ty
@@ -36,7 +36,7 @@ macro_rules! define_blocks {
         $(#[$tmeta])*
         $tvis enum $tname {
             $(
-                $(#[$vmeta: meta])*
+                $(#[$vmeta])*
                 $var $({
                     $(
                         $(#[$fmeta])*
@@ -57,6 +57,22 @@ macro_rules! define_blocks {
             )?
 
         }
+
+        crate::blocks::define_blocks!(
+            ;unit;$tname;$tvis ($($unit)?);
+            $(
+                $opcode => $var $(
+                    { $($fname),* }
+                )?,
+            )*
+            $(
+                $(
+                    $skipopcode => $skipvar $(
+                        { $($skipfname),* }
+                    )?,
+                )*
+            )?
+        );
 
         impl crate::blocks::dt_interface::FromJsonBlock for $tname {
             #[allow(unused)]
@@ -85,6 +101,41 @@ macro_rules! define_blocks {
             }
         }
     };
+    (;unit;$name: ident;$tvis: vis ($unit: ident);
+        $($opcode: literal => $var: ident $({ $($args: ident),* })?),* $(,)?
+    ) => {
+        #[allow(unused)]
+        #[derive(Debug, PartialEq, Clone, Copy, Hash)]
+        $tvis enum $unit {
+            $($var),*
+        }
+        impl crate::blocks::dt_interface::GetOpcodeUnit for $name {
+            type Opcode = $unit;
+
+            fn get_opcode(&self) -> $unit {
+                #[allow(unused)]
+                match self {
+                    $(
+                        Self::$var $({ $($args),* })? => $unit::$var,
+                    )*
+                }
+            }
+        }
+
+        impl std::fmt::Display for $unit {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    $(
+                        Self::$var => f.write_str($opcode),
+                    )*
+                }
+            }
+        }
+
+    };
+    (;unit;$name: ident;$tvis: vis ();
+        $($opcode: literal => $var: ident $({ $($args : ident),* })?),* $(,)?
+    ) => {};
     (;get_obj;inputs; $inputs: ident, $fields: ident) => { $inputs };
     (;get_obj;fields; $inputs: ident, $fields: ident) => { $fields };
     (;get_obj;input; $inputs: ident, $fields: ident) => { $inputs };

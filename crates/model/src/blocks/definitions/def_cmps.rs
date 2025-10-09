@@ -2,7 +2,7 @@ use crate::{Expression, List, RefBlock};
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
-    pub enum CmpBlockKind :
+    pub enum CmpBlockKind (CmpBlockKindUnit):
 
     "operator_and" => OperatorAnd {
         operand1: RefBlock,

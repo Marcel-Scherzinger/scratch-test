@@ -2,7 +2,7 @@ use crate::{ArgumentReporterName, DropdownSelection, Expression, List, Variable}
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
-    pub enum ExprBlockKind:
+    pub enum ExprBlockKind (ExprBlockKindUnit):
 
     "argument_reporter_string_number" => ArgumentReporterStringNumber {
         (field) value: ArgumentReporterName,
@@ -73,11 +73,11 @@ super::define_blocks! {
 
 
     skip => {
-        RDataList {
+        ("pseudo_read_data_list") RDataList {
             list: List,
         },
-        RDataVar {
+        ("pseudo_read_data_variable") RDataVar {
             variable: Variable,
         }
-    }
+    },
 }

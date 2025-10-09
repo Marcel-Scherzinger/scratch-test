@@ -12,8 +12,8 @@ mod scratch_expr;
 use std::rc::Rc;
 
 pub use blocks::{
-    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, EventBlockKind, ExprBlockKind,
-    StmtBlockKind,
+    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, CmpBlockKindUnit, EventBlockKind,
+    ExprBlockKind, StmtBlockKind,
 };
 pub use error::{DocError, Error};
 use ext::*;
