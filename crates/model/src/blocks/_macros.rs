@@ -37,6 +37,7 @@ macro_rules! define_blocks {
         $tvis enum $tname {
             $(
                 $(#[$vmeta])*
+                #[doc = concat!{"\n≡ ", $opcode}]
                 $var $({
                     $(
                         $(#[$fmeta])*

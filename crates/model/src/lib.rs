@@ -1,4 +1,4 @@
-/// copied from [https://github.com/scratchfoundation/scratch-vm/blob/develop/src/serialization/sb3.js]
+/// copied from [<https://github.com/scratchfoundation/scratch-vm/blob/develop/src/serialization/sb3.js>]
 pub mod constants;
 
 mod blocks;
