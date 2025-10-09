@@ -1,49 +1,107 @@
-macro_rules! getter {
-    ($map: ident . $key: literal as $elemtype: ident) => {
-        getter!($map: $map . $key as $elemtype, )
-    };
-    ($map: ident . $key: literal as optional $elemtype: ident) => {
-        getter!($map: $map . $key as $elemtype, optional)
-    };
-    (inputs: $map: ident . $key: literal as $elemtype: ident, $($modifier: ident)?) => {{
-        getter!(/"inputs": $map.$key as $elemtype, $($modifier)?)
-    }};
-    (fields: $map: ident . $key: literal as $elemtype: ident, $($modifier: ident)?) => {{
-        getter!(/"fields": $map.$key as $elemtype, $($modifier)?)
-    }};
-    (/$source: literal: $map: ident . $key: literal as $elemtype: ident, ) => {{
-        if let Some(entry) = &$map.get($key) {
-            getter!(;; $elemtype, &entry).map_err(|error| {
-                $crate::blocks::BlockAttrError::Invalid {
-                    treated_as: stringify!{$elemtype}, attr_name: $key, source: $source, error
-                }
-            })
-        } else {
-            Err($crate::blocks::BlockAttrError::Missing{
-                treated_as: stringify!{$elemtype}, attr_name: $key, source: $source,
-            })
-        }
-    }};
-    (/$source: literal: $map: ident . $key: literal as $elemtype: ident, optional) => {{
-        if let Some(entry) = &$map.get($key) {
-            match getter!(;; $elemtype, &entry) {
-                Ok(o) => Ok(Some(o)),
-                Err($crate::interpret_json::FormatError::OpcodeNull) => Ok(None),
-                Err(error) => {
-                    Err($crate::blocks::BlockAttrError::Invalid {
-                        treated_as: stringify!{$elemtype}, attr_name: $key, source: $source, error
-                    })
-                }
+macro_rules! define_blocks {
+    (
+        $(#[$tmeta: meta])*
+        $tvis: vis enum $tname: ident :
+
+        $(
+            $(#[$vmeta: meta])*
+            $opcode: literal => $var: ident $({
+                $(
+                    $(#[$fmeta: meta])*
+                    $(($fsrc: ident))?  $fname : ident $($fkey: literal)? : $ftype: ty
+                ),*
+                $(,)?
+            })?
+        ),*
+
+        $(
+        ,
+            skip => {
+                $(
+                    $(#[$skipvmeta: meta])*
+                    $skipvar: ident $({
+                        $(
+                            $(#[$skipfmeta: meta])*
+                            $skipfname : ident : $skipftype: ty
+                        ),*
+                        $(,)?
+                    })?
+                ),*
+                $(,)?
             }
-        } else {
-            Ok(None)
+        )?
+
+        $(,)?
+    ) => {
+        $(#[$tmeta])*
+        $tvis enum $tname {
+            $(
+                $(#[$vmeta: meta])*
+                $var $({
+                    $(
+                        $(#[$fmeta])*
+                        $fname: $ftype
+                    ),*
+                })?
+            ),*
+            $(,
+                $(
+                    $(#[$skipvmeta])*
+                    $skipvar $( {
+                        $(
+                            $(#[$skipfmeta])*
+                            $skipfname: $skipftype
+                        ),*
+                    } )?
+                ),*
+            )?
+
         }
-    }};
-    (;; blockref, $arg: expr) => { crate::interpret_json::get_block_ref($arg) };
-    (;; listref, $arg: expr) => { crate::interpret_json::get_list_ref($arg) };
-    (;; variableref, $arg: expr) => { crate::interpret_json::get_variable_ref($arg) };
-    (;; expression, $arg: expr) => { crate::interpret_json::get_expression($arg) };
-    (;; dropdown, $arg: expr) => { crate::interpret_json::get_dropdown_selection($arg) };
-    (;; argumentreporter, $arg: expr) => { crate::interpret_json::get_argument_reporter_name($arg) };
+
+        impl crate::blocks::dt_interface::FromJsonBlock for $tname {
+            #[allow(unused)]
+            fn from_json_block(
+                opcode: &str,
+                inputs: &serde_json::Map<String, serde_json::Value>,
+                fields: &serde_json::Map<String, serde_json::Value>,
+            ) -> Result<Option<crate::BlockKind>, crate::blocks::ParseKindError> {
+                use crate::blocks::dt_interface::ValueAttributeFromJson;
+                Ok(Some(
+                    match opcode {
+                        $(
+                            $opcode => Self::$var $({
+                                $(
+                                    $fname: <$ftype as ValueAttributeFromJson>::value_from_json_outer(
+                                        crate::blocks::define_blocks!(;get_obj_str;$($fsrc)?; inputs, fields),
+                                        crate::blocks:: define_blocks!(;get_obj;$($fsrc)?; inputs, fields),
+                                        crate::blocks:: define_blocks!(;get_key;; $($fkey)?, $fname)
+                                    )?,
+                                )*
+                            })?.into(),
+                        )*
+                        _ => { return Ok(None); }
+                    }
+                ))
+            }
+        }
+    };
+    (;get_obj;inputs; $inputs: ident, $fields: ident) => { $inputs };
+    (;get_obj;fields; $inputs: ident, $fields: ident) => { $fields };
+    (;get_obj;input; $inputs: ident, $fields: ident) => { $inputs };
+    (;get_obj;field; $inputs: ident, $fields: ident) => { $fields };
+    (;get_obj;; $inputs: ident, $fields: ident) => { $inputs };
+
+    (;get_obj_str;inputs; $inputs: ident, $fields: ident) => { "inputs" };
+    (;get_obj_str;fields; $inputs: ident, $fields: ident) => { "fields" };
+    (;get_obj_str;input; $inputs: ident, $fields: ident) => { "inputs" };
+    (;get_obj_str;field; $inputs: ident, $fields: ident) => { "fields" };
+    (;get_obj_str;; $inputs: ident, $fields: ident) => { "inputs" };
+
+    (;get_key;; $fkey: literal, $fname: ident) => { $fkey };
+    (;get_key;; , $fname: ident) => { {
+        const {
+            const_str::convert_ascii_case!{upper, stringify! { $fname } }
+        }
+    } };
 }
-pub(crate) use getter;
+pub(crate) use define_blocks;

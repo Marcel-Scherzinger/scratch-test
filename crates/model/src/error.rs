@@ -1,7 +1,4 @@
-use crate::{
-    IntegerOutOfBounds, JsonCtxError, OpcodeNum, TargetBlocksError, TargetError, TargetListsError,
-    TargetVariablesError,
-};
+use crate::{JsonCtxError, TargetBlocksError, TargetError, TargetListsError, TargetVariablesError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

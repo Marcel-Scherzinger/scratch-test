@@ -6,10 +6,11 @@ edition = "2024"
 [dependencies]
 serde_json = "1.0.145"
 thiserror = { workspace = true }
-derive_more = { version = "2.0.1", features = ["display", "from", "debug"] }
+derive_more = { version = "2.0.1", features = ["display", "from", "debug", "deref"] }
 zip = { version = "5.1.1", optional = true, default-features = false, features = ["deflate64", "deflate"] }
 log = "0.4.28"
 derive-getters = "0.5.0"
+const-str = { version = "0.7.0", default-features = false }
 
 [features]
 default = ["sb3"]

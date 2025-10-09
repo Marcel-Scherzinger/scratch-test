@@ -1,5 +1,7 @@
+use std::ops::Deref;
+
 use itertools::Itertools;
-use model::{BlockKind, Id, ScratchExpr};
+use model::{BlockKind, EventBlockKind, Id, RefBlock, ScratchExpr};
 
 use crate::{Interpreter, RResult, RunError, StackItem, Starting};
 
@@ -23,7 +25,9 @@ impl Interpreter<Starting> {
         use BlockKind as K;
         use model::StmtBlockKind as S;
         match &kind {
-            K::EventWhenflagclicked | K::EventWhenkeypressed { .. } => {
+            K::Event(
+                EventBlockKind::EventWhenflagclicked | EventBlockKind::EventWhenkeypressed { .. },
+            ) => {
                 self.state.stack_push_opt(next)?;
             }
             K::Noop(_noop) => {
@@ -66,11 +70,11 @@ impl Interpreter<Starting> {
                     condition,
                     substack,
                 } => {
-                    let stop_loop = self.evaluate_opt_cmp(condition.clone())?;
+                    let stop_loop = self.evaluate_opt_cmp(condition)?;
                     if !stop_loop {
                         if let Some(substack) = substack {
                             self.state.stack_push(stack_item)?;
-                            self.state.stack_push(substack.clone())?;
+                            self.state.stack_push(substack.o_id())?;
                         } else {
                             Err(crate::RunError::ConditionLoopWithoutBodyNeverStops)?;
                         }
@@ -78,12 +82,9 @@ impl Interpreter<Starting> {
                         self.state.stack_push_opt(next)?;
                     }
                 }
-                S::DataSetvariableto {
-                    variable_to_set,
-                    value,
-                } => {
+                S::DataSetvariableto { variable, value } => {
                     let value = self.evaluate_expr(value)?;
-                    self.state.set_variable(variable_to_set, value)?;
+                    self.state.set_variable(variable, value)?;
                     self.state.stack_push_opt(next)?;
                 }
                 S::DataChangevariableby { variable, value } => {
@@ -109,28 +110,31 @@ impl Interpreter<Starting> {
                     condition,
                     substack,
                 } => {
-                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    let condition = self.evaluate_opt_cmp(condition)?;
                     self.state.stack_push_opt(next)?;
                     // push body if not empty
-                    self.state.stack_push_opt(substack.clone())?;
+                    self.state
+                        .stack_push_opt(substack.as_ref().map(|b| b.o_id()))?;
                 }
                 S::ControlIfElse {
                     condition,
                     substack,
                     substack2,
                 } => {
-                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    let condition = self.evaluate_opt_cmp(condition)?;
                     self.state.stack_push_opt(next)?;
                     if condition {
-                        self.state.stack_push_opt(substack.clone())?;
+                        self.state
+                            .stack_push_opt(substack.as_ref().map(|d| d.o_id()))?;
                     } else {
-                        self.state.stack_push_opt(substack2.clone())?;
+                        self.state
+                            .stack_push_opt(substack2.as_ref().map(|d| d.o_id()))?;
                     }
                 }
                 S::ControlForever { substack } => {
                     if let Some(substack) = substack {
                         self.state.stack_push(stack_item)?;
-                        self.state.stack_push(substack.clone())?;
+                        self.state.stack_push(substack.deref().clone())?;
                     } else {
                         // TODO: better error variant
                         return Err(RunError::ConditionLoopWithoutBodyNeverStops);
@@ -146,7 +150,7 @@ impl Interpreter<Starting> {
                     }
                 },
                 S::ControlWaitUntil { condition } => {
-                    let condition = self.evaluate_opt_cmp(condition.clone())?;
+                    let condition = self.evaluate_opt_cmp(condition)?;
                     if condition {
                         self.state.stack_push_opt(next)?;
                         return Ok(());
@@ -170,7 +174,8 @@ impl Interpreter<Starting> {
                                 block.id().clone(),
                                 remaining - 1,
                             ));
-                            self.state.stack_push_opt(substack.clone());
+                            self.state
+                                .stack_push_opt(substack.as_ref().map(|d| d.o_id()));
                         }
                     }
                 }
@@ -391,7 +396,7 @@ impl Interpreter<Starting> {
                         | E::ArgumentReporterBoolean { value } => todo!(),
                     })
                 } else {
-                    Err(crate::RunError::UnexpectedBlockKind(id.clone()))
+                    Err(crate::RunError::UnexpectedBlockKind(id.deref().clone()))
                 }
             }
             E::Lis(list) => self.state.get_list_value(list),
@@ -406,16 +411,16 @@ impl Interpreter<Starting> {
         if let model::BlockKind::Cmp(kind) = kind {
             Ok(match kind {
                 C::OperatorOr { operand1, operand2 } => {
-                    let operand1 = self.evaluate_cmp(operand1.clone())?;
-                    let operand2 = self.evaluate_cmp(operand2.clone())?;
+                    let operand1 = self.evaluate_cmp(operand1.deref().clone())?;
+                    let operand2 = self.evaluate_cmp(operand2.deref().clone())?;
                     operand1 || operand2
                 }
                 C::OperatorAnd { operand1, operand2 } => {
-                    let operand1 = self.evaluate_cmp(operand1.clone())?;
-                    let operand2 = self.evaluate_cmp(operand2.clone())?;
+                    let operand1 = self.evaluate_cmp(operand1.o_id())?;
+                    let operand2 = self.evaluate_cmp(operand2.o_id())?;
                     operand1 && operand2
                 }
-                C::OperatorNot { operand } => self.evaluate_cmp(operand.clone())?,
+                C::OperatorNot { operand } => self.evaluate_cmp(operand.o_id())?,
                 C::OperatorEquals { operand1, operand2 } => self
                     .evaluate_expr(operand1)?
                     .scratch_eq(&self.evaluate_expr(operand2)?),
@@ -442,9 +447,9 @@ impl Interpreter<Starting> {
             Err(RunError::UnexpectedBlockKind(id.clone()))
         }
     }
-    fn evaluate_opt_cmp(&mut self, id: Option<Id>) -> RResult<bool> {
+    fn evaluate_opt_cmp(&mut self, id: &Option<RefBlock>) -> RResult<bool> {
         if let Some(id) = id {
-            self.evaluate_cmp(id)
+            self.evaluate_cmp(id.o_id())
         } else {
             Ok(false)
         }

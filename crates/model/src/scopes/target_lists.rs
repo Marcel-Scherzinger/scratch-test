@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::interpret_json::List;
 use crate::scratch_expr::SValue as VariableValue;
 
-use crate::{Id, interpret_json::Variable};
+use crate::Id;
 
 #[derive(Debug, PartialEq)]
 pub struct TargetLists {

@@ -66,6 +66,9 @@ impl SValue {
                 on_int(self.as_int(), other.as_int())
             }
             (Self::Int(_), Self::Int(_)) => on_int(self.as_int(), other.as_int()),
+            (Self::Text(a), Self::Text(b)) if !a.contains(".") && !b.contains(".") => {
+                on_int(self.as_int(), other.as_int())
+            }
             (Self::Text(_), _) | (_, Self::Text(_)) => on_float(self.as_float(), other.as_float()),
         }
     }
@@ -73,8 +76,8 @@ impl SValue {
         match (self, other) {
             (Self::Float(_), _) | (_, Self::Float(_)) => true,
             (Self::Int(_), Self::Int(_)) => false,
-            (Self::Text(text), _) | (_, Self::Text(text)) if !text.contains(".") => false,
-            (Self::Text(text), _) | (_, Self::Text(text)) => true,
+            (Self::Text(a), Self::Text(b)) => a.contains(".") || b.contains("."),
+            (Self::Text(text), _) | (_, Self::Text(text)) => text.contains("."),
         }
     }
     pub fn is_float(&self) -> bool {

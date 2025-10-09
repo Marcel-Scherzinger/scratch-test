@@ -1,5 +1,5 @@
 use crate::{
-    ArgumentReporterName, DropdownSelection, Error, Id, IntegerOutOfBounds, OpcodeNum, RefBlock,
+    ArgumentReporterName, DropdownSelection, Id, IntegerOutOfBounds, OpcodeNum, RefBlock,
     constants, scratch_expr::SValue,
 };
 
@@ -80,29 +80,7 @@ pub enum FormatError {
     ExpectedArray,
 }
 
-macro_rules! get_or_parse_impl {
-    ($funcname: ident, $type: ty, $as: ident) => {
-        fn $funcname(opcode: OpcodeNum, val: &serde_json::Value) -> Result<$type, FormatError> {
-            if let Some(n) = val.$as() {
-                Ok(n)
-            } else {
-                val.as_str()
-                    .ok_or(FormatError::NoNumber)?
-                    .parse()
-                    .map_err(|_| FormatError::UnexpectedNumberKind {
-                        opcode,
-                        value: val.clone(),
-                    })
-            }
-        }
-    };
-}
-
-get_or_parse_impl!(get_or_parse_f64, f64, as_f64);
-get_or_parse_impl!(get_or_parse_i64, i64, as_i64);
-get_or_parse_impl!(get_or_parse_u64, u64, as_u64);
-
-fn get_maybe_number(opcode: OpcodeNum, val: &serde_json::Value) -> Result<SValue, FormatError> {
+fn get_maybe_number(_opcode: OpcodeNum, val: &serde_json::Value) -> Result<SValue, FormatError> {
     if let Some(num) = val.as_number() {
         SValue::try_from(num.clone())
     } else if let Some(text) = val.as_str() {

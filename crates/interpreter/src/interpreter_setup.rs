@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use model::{Id, ProjectDoc, Target};
+use model::{EventBlockKind, Id, ProjectDoc, Target};
 
 use crate::{InterpreterReport, Limits, RResult, State};
 
@@ -95,7 +95,7 @@ fn count_green_flag_events(doc: &model::ProjectDoc) -> Result<(usize, Id), usize
 
     for (target_idx, target) in doc.targets().iter().enumerate() {
         for block in target.blocks().iter_blocks() {
-            if let model::BlockKind::EventWhenflagclicked = block.inner() {
+            if let model::BlockKind::Event(EventBlockKind::EventWhenflagclicked) = block.inner() {
                 match res {
                     Err(0) => {
                         res = Ok((target_idx, block.id().clone()));
@@ -119,7 +119,9 @@ fn count_key_press_events(doc: &model::ProjectDoc) -> Result<(usize, Id), usize>
 
     for (target_idx, target) in doc.targets().iter().enumerate() {
         for block in target.blocks().iter_blocks() {
-            if let model::BlockKind::EventWhenkeypressed { key_option } = block.inner() {
+            if let model::BlockKind::Event(EventBlockKind::EventWhenkeypressed { key_option }) =
+                block.inner()
+            {
                 match res {
                     Err(0) => {
                         res = Ok((target_idx, block.id().clone()));

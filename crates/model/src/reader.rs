@@ -1,7 +1,8 @@
 use std::io::Read;
 
-use crate::{Error, ProjectDoc, error::DocError};
+use crate::{ProjectDoc, error::DocError};
 
+#[allow(unused)]
 pub fn json_from_sb3_stream<R: Read>(
     handle: &mut R,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {

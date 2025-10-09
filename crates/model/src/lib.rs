@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 /// copied from [https://github.com/scratchfoundation/scratch-vm/blob/develop/src/serialization/sb3.js]
 pub mod constants;
 
@@ -14,7 +12,8 @@ mod scratch_expr;
 use std::rc::Rc;
 
 pub use blocks::{
-    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, ExprBlockKind, StmtBlockKind,
+    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, EventBlockKind, ExprBlockKind,
+    StmtBlockKind,
 };
 pub use error::{DocError, Error};
 use ext::*;
@@ -28,9 +27,41 @@ pub use scratch_expr::SValue;
 
 pub type Id = Rc<str>;
 pub type OpcodeNum = u64;
-pub type RefBlock = Id;
-pub type DropdownSelection = Rc<str>;
-pub type ArgumentReporterName = Rc<str>;
+
+#[derive(derive_more::Debug, PartialEq, derive_more::Deref, derive_more::From)]
+#[debug("{_0:?}")]
+pub struct RefBlock(Id);
+
+#[derive(derive_more::Debug, PartialEq, derive_more::Deref, derive_more::From)]
+#[debug("{_0:?}")]
+pub struct DropdownSelection(Rc<str>);
+
+#[derive(derive_more::Debug, PartialEq, derive_more::Deref, derive_more::From)]
+#[debug("{_0:?}")]
+pub struct ArgumentReporterName(Rc<str>);
+
+impl RefBlock {
+    pub fn id(&self) -> &Id {
+        &self.0
+    }
+    pub fn o_id(&self) -> Id {
+        self.0.clone()
+    }
+}
+
+macro_rules! impl_string_from {
+    ($type: ty, $inter: ty) => {
+        impl<'a> From<&'a str> for $type {
+            fn from(val: &'a str) -> Self {
+                let r: $inter = val.into();
+                r.into()
+            }
+        }
+    };
+}
+impl_string_from!(RefBlock, Rc<str>);
+impl_string_from!(DropdownSelection, Rc<str>);
+impl_string_from!(ArgumentReporterName, Rc<str>);
 
 impl ProjectDoc {
     pub fn from_json(doc: serde_json::Value) -> Result<ProjectDoc, Error> {
