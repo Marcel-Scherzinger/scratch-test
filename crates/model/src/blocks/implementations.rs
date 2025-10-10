@@ -5,7 +5,7 @@ use crate::{
     interpret_json::{List, Variable},
 };
 
-impl crate::FromJsonExt<Self, BlockKindError> for BlockKind {
+impl crate::ext::FromJsonExt<Self, BlockKindError> for BlockKind {
     fn from_json_without_ctx(obj: &serde_json::Value) -> Result<Self, BlockKindError> {
         if obj.is_object() {
             let opcode = obj["opcode"].as_str().ok_or(BlockKindError::NoOpcode)?;

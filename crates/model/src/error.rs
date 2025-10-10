@@ -1,4 +1,6 @@
-use crate::{JsonCtxError, TargetBlocksError, TargetError, TargetListsError, TargetVariablesError};
+use crate::{
+    TargetBlocksError, TargetError, TargetListsError, TargetVariablesError, ext::JsonCtxError,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

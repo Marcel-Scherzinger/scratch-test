@@ -1,6 +1,7 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::{BlockKind, BlockKindError, FromJsonExt, Id, UnsupportedBlockKind, ext::JsonCtxError};
+use crate::ext::{FromJsonExt, JsonCtxError};
+use crate::{BlockKind, BlockKindError, Id, UnsupportedBlockKind};
 
 #[derive(Debug, thiserror::Error)]
 pub enum TargetBlocksError {
@@ -49,7 +50,7 @@ impl TargetBlocks {
     }
 }
 
-impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
+impl crate::ext::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     fn from_json_without_ctx(value: &serde_json::Value) -> Result<Self, TargetBlocksError> {
         let dict = value.as_object().ok_or(TargetBlocksError::ExpectedObject)?;
 
@@ -95,8 +96,8 @@ impl BlockWrapper {
     pub(crate) fn from_json_with_ctx(
         id: Id,
         value: &serde_json::Value,
-    ) -> Result<Self, crate::JsonCtxError<BlockKindError>> {
-        use crate::WithJsonContextExt;
+    ) -> Result<Self, crate::ext::JsonCtxError<BlockKindError>> {
+        use crate::ext::WithJsonContextExt;
         Self::from_json_without_ctx(id, value).with_json(value)
     }
 }

@@ -26,7 +26,7 @@ impl TargetVariables {
     }
 }
 
-impl crate::FromJsonExt<Self, TargetVariablesError> for TargetVariables {
+impl crate::ext::FromJsonExt<Self, TargetVariablesError> for TargetVariables {
     fn from_json_without_ctx(value: &serde_json::Value) -> Result<Self, TargetVariablesError> {
         let dict = value
             .as_object()

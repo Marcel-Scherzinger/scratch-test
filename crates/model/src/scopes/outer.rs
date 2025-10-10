@@ -1,8 +1,8 @@
 use std::rc::Rc;
 
 use crate::{
-    BlockKindError, Error, FromJsonExt, Id, TargetBlocks, TargetLists, TargetVariables,
-    UnsupportedBlockKind,
+    BlockKindError, Error, Id, TargetBlocks, TargetLists, TargetVariables, UnsupportedBlockKind,
+    ext::FromJsonExt,
     ext::{JsonCtxError, WithJsonContextExt},
 };
 

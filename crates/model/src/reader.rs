@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::{ProjectDoc, error::DocError};
+use crate::{Error, ProjectDoc, Target, TargetError, error::DocError};
 
 #[allow(unused)]
 pub fn json_from_sb3_stream<R: Read>(
@@ -40,5 +40,18 @@ impl ProjectDoc {
                 }
             }
         }
+    }
+    pub fn from_json(doc: serde_json::Value) -> Result<ProjectDoc, Error> {
+        use crate::ext::WithJsonContextExt;
+        let semver = doc["meta"]["semver"].as_str().map(std::rc::Rc::from);
+        let targets = doc["targets"]
+            .as_array()
+            .ok_or(TargetError::NoTargetsArray)
+            .with_json(&doc)?;
+        let targets: Result<Vec<Target>, _> = targets.iter().map(Target::from_json).collect();
+        Ok(ProjectDoc {
+            targets: targets?.into(),
+            semver,
+        })
     }
 }
