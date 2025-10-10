@@ -19,7 +19,7 @@ super::define_blocks! {
     "looks_think" => LooksThink {
         message: Expression,
     },
-    "looks_think" => LooksThinkforsecs {
+    "looks_thinkforsecs" => LooksThinkforsecs {
         message: Expression,
         secs: Expression,
     },

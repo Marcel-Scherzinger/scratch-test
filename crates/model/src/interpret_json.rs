@@ -45,7 +45,7 @@ pub enum Expression {
     Lis(List),
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, PartialEq)]
 pub enum FormatError {
     /// A read number is too big
     #[error("{0}")]

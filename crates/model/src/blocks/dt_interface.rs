@@ -1,4 +1,4 @@
-use crate::{BlockKind, interpret_json::FormatError};
+use crate::interpret_json::FormatError;
 
 #[allow(unused)]
 pub(crate) trait GetOpcodeUnit {
@@ -12,7 +12,9 @@ pub(crate) trait FromJsonBlock {
         opcode: &str,
         inputs: &serde_json::Map<String, serde_json::Value>,
         fields: &serde_json::Map<String, serde_json::Value>,
-    ) -> Result<Option<BlockKind>, super::ParseKindError>;
+    ) -> Result<Option<Self>, super::ParseKindError>
+    where
+        Self: Sized;
 }
 
 pub(crate) trait ValueAttrJsonElemtype {

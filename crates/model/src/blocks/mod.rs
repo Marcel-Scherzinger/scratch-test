@@ -11,5 +11,6 @@ use error::ParseKindError;
 
 pub use definitions::{
     BlockKind, CmpBlockKind, CmpBlockKindUnit, EventBlockKind, ExprBlockKind, StmtBlockKind,
+    UnsupportedBlockKind,
 };
 pub use error::{BlockAttrError, BlockKindError};

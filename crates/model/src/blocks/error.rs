@@ -1,6 +1,8 @@
-use crate::interpret_json::FormatError;
+use std::rc::Rc;
 
-#[derive(Debug, thiserror::Error)]
+use crate::{blocks::definitions::UnsupportedBlockKind, interpret_json::FormatError};
+
+#[derive(Debug, thiserror::Error, PartialEq)]
 pub enum BlockKindError {
     #[error("format-error: {0}")]
     Format(#[from] FormatError),
@@ -23,11 +25,11 @@ pub enum BlockKindError {
 
     /// The block is unknown
     #[error("the provided block ({0:?}) is unknown")]
-    UnknownBlock(String),
+    UnknownBlock(Rc<str>),
     /// The block is known and (intentionally) unsupported.
     /// Programs containing this block get rejected.
     #[error("the provided block with opcode ({0:?}) is unsupperted")]
-    UnsupportedBlock(String),
+    UnsupportedBlock(UnsupportedBlockKind),
     /// The block is missing an attribute that is needed for the block's type.
     #[error("block (kind={block_kind}) {error}")]
     Missing {
@@ -36,7 +38,7 @@ pub enum BlockKindError {
     },
 }
 
-#[derive(Debug, derive_more::Display)]
+#[derive(Debug, derive_more::Display, PartialEq)]
 pub enum BlockAttrError {
     #[display(
         "doesn't contain required attribute {attr_name:?} in {source:?} when treated as {treated_as:?}: {error}"
@@ -69,7 +71,7 @@ impl std::error::Error for BlockAttrError {}
 pub(super) enum ParseKindError {
     MissingAttr(super::BlockAttrError),
     #[from(skip)]
-    OpcodeUnknown(String),
+    OpcodeUnknown(Rc<str>),
     #[from(skip)]
-    OpcodeUnsupported(String),
+    OpcodeUnsupported(UnsupportedBlockKind),
 }

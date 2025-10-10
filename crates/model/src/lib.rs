@@ -13,12 +13,13 @@ use std::rc::Rc;
 
 pub use blocks::{
     BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, CmpBlockKindUnit, EventBlockKind,
-    ExprBlockKind, StmtBlockKind,
+    ExprBlockKind, StmtBlockKind, UnsupportedBlockKind,
 };
 pub use error::{DocError, Error};
 use ext::*;
 use interpret_json::*;
 pub use interpret_json::{Expression, List, Variable};
+pub use reader::json_from_sb3_stream;
 pub use scopes::*;
 pub use scratch_expr::{IntegerOutOfBounds, ScratchExpr};
 

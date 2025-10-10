@@ -1070,6 +1070,7 @@ dependencies = [
  "const-str",
  "derive-getters",
  "derive_more",
+ "itertools",
  "log",
  "serde_json",
  "thiserror 2.0.16",

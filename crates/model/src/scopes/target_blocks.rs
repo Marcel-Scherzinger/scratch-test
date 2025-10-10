@@ -1,29 +1,51 @@
 use std::{collections::HashMap, rc::Rc};
 
-use crate::{BlockKind, BlockKindError, FromJsonExt, Id, ext::JsonCtxError};
+use crate::{BlockKind, BlockKindError, FromJsonExt, Id, UnsupportedBlockKind, ext::JsonCtxError};
 
 #[derive(Debug, thiserror::Error)]
 pub enum TargetBlocksError {
     #[error("expected object {{...}} for blocks of target")]
     ExpectedObject,
-    #[error("at least one target block (id={id:?}) has unknown structure (block-error={error})")]
+    /* #[error("at least one target block (id={id:?}) has unknown structure (block-error={error})")]
     AtLeastOneInvalid {
         id: Id,
         error: JsonCtxError<BlockKindError>,
-    },
+    }, */
 }
 
 #[derive(Debug, PartialEq)]
 pub struct TargetBlocks {
-    map: HashMap<Id, Rc<BlockWrapper>>,
+    valid: HashMap<Id, Rc<BlockWrapper>>,
+    invalid: HashMap<Id, Rc<JsonCtxError<BlockKindError>>>,
 }
 
 impl TargetBlocks {
     pub fn iter_blocks(&self) -> impl Iterator<Item = &Rc<BlockWrapper>> {
-        self.map.values()
+        self.valid.values()
     }
     pub fn get(&self, id: &Id) -> Option<&Rc<BlockWrapper>> {
-        self.map.get(id)
+        self.valid.get(id)
+    }
+    pub fn iter_invalid(&self) -> impl Iterator<Item = (&Id, &Rc<JsonCtxError<BlockKindError>>)> {
+        self.invalid.iter()
+    }
+    pub fn iter_unknown_blocks(&self) -> impl Iterator<Item = (&Id, &Rc<str>)> {
+        self.iter_invalid().filter_map(|(id, e)| {
+            if let BlockKindError::UnknownBlock(n) = e.error() {
+                Some((id, n))
+            } else {
+                None
+            }
+        })
+    }
+    pub fn iter_unsupported_blocks(&self) -> impl Iterator<Item = (&Id, &UnsupportedBlockKind)> {
+        self.iter_invalid().filter_map(|(id, e)| {
+            if let BlockKindError::UnsupportedBlock(n) = e.error() {
+                Some((id, n))
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -31,18 +53,20 @@ impl crate::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     fn from_json_without_ctx(value: &serde_json::Value) -> Result<Self, TargetBlocksError> {
         let dict = value.as_object().ok_or(TargetBlocksError::ExpectedObject)?;
 
-        let map: Result<_, TargetBlocksError> = dict
+        let (valid, invalid): (Vec<_>, Vec<_>) = dict
             .into_iter()
             .map(|(id, obj): (&String, &serde_json::Value)| {
                 let id: Id = id.clone().into();
                 match BlockWrapper::from_json_with_ctx(id.clone(), obj) {
                     Ok(b) => Ok((id, b.into())),
-                    Err(error) => Err(TargetBlocksError::AtLeastOneInvalid { id, error }),
+                    Err(error) => Err((id, Rc::new(error))),
                 }
             })
-            .collect();
+            .partition(|r| r.is_ok());
+        let valid = valid.into_iter().flatten().collect();
+        let invalid = invalid.into_iter().flat_map(Result::err).collect();
 
-        Ok(Self { map: map? })
+        Ok(Self { valid, invalid })
     }
 }
 

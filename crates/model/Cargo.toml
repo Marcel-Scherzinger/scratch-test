@@ -12,6 +12,9 @@ log = "0.4.28"
 derive-getters = "0.5.0"
 const-str = { version = "0.7.0", default-features = false }
 
+[dev-dependencies]
+itertools = "0.14.0"
+
 [features]
 default = ["sb3"]
 sb3 = [ "dep:zip" ]

@@ -81,7 +81,7 @@ macro_rules! define_blocks {
                 opcode: &str,
                 inputs: &serde_json::Map<String, serde_json::Value>,
                 fields: &serde_json::Map<String, serde_json::Value>,
-            ) -> Result<Option<crate::BlockKind>, crate::blocks::ParseKindError> {
+            ) -> Result<Option<Self>, crate::blocks::ParseKindError> {
                 use crate::blocks::dt_interface::ValueAttributeFromJson;
                 Ok(Some(
                     match opcode {
@@ -94,7 +94,7 @@ macro_rules! define_blocks {
                                         crate::blocks:: define_blocks!(;get_key;; $($fkey)?, $fname)
                                     )?,
                                 )*
-                            })?.into(),
+                            })?,
                         )*
                         _ => { return Ok(None); }
                     }

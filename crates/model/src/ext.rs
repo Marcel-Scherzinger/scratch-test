@@ -1,4 +1,4 @@
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, PartialEq, derive_getters::Getters)]
 #[error("{error}: json={json:?}")]
 pub struct JsonCtxError<E> {
     error: E,
