@@ -1,0 +1,43 @@
+use super::{CmpBlockKind, EventBlockKind, ExprBlockKind, NoopStmtBlockKind, StmtBlockKind};
+use super::{
+    CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit, NoopStmtBlockKindUnit,
+    StmtBlockKindUnit,
+};
+use crate::blocks::dt_interface::GetOpcodeUnit;
+
+#[derive(Debug, derive_more::From, PartialEq)]
+pub enum BlockKind {
+    Event(EventBlockKind),
+    Cmp(CmpBlockKind),
+    Expr(ExprBlockKind),
+    Stmt(StmtBlockKind),
+    Noop(NoopStmtBlockKind),
+}
+
+#[derive(Debug, derive_more::From, PartialEq, Clone, Copy, derive_more::Display)]
+pub enum BlockKindUnit {
+    #[display("{_0}")]
+    Event(EventBlockKindUnit),
+    #[display("{_0}")]
+    Cmp(CmpBlockKindUnit),
+    #[display("{_0}")]
+    Expr(ExprBlockKindUnit),
+    #[display("{_0}")]
+    Stmt(StmtBlockKindUnit),
+    #[display("{_0}")]
+    Noop(NoopStmtBlockKindUnit),
+}
+
+impl GetOpcodeUnit for BlockKind {
+    type Opcode = BlockKindUnit;
+
+    fn get_opcode(&self) -> Self::Opcode {
+        match self {
+            Self::Expr(u) => u.get_opcode().into(),
+            Self::Event(u) => u.get_opcode().into(),
+            Self::Cmp(u) => u.get_opcode().into(),
+            Self::Stmt(u) => u.get_opcode().into(),
+            Self::Noop(u) => u.get_opcode().into(),
+        }
+    }
+}

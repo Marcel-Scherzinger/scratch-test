@@ -1,13 +1,16 @@
 use std::{collections::HashMap, rc::Rc};
 
-use model::{Id, List, Variable, SValue};
+use model::{
+    Id, SValue,
+    attr::{List, Variable},
+};
 
 use crate::{RResult, RunError};
 
 #[derive(Debug, PartialEq)]
 pub struct AllVariables {
     is_global: HashMap<Id, bool>,
-    details: HashMap<Id, model::Variable>,
+    details: HashMap<Id, model::attr::Variable>,
     values: HashMap<Id, model::SValue>,
 }
 impl AllVariables {
@@ -63,7 +66,7 @@ impl AllVariables {
 #[derive(Debug, PartialEq)]
 pub struct AllLists {
     is_global: HashMap<Id, bool>,
-    details: HashMap<Id, model::List>,
+    details: HashMap<Id, model::attr::List>,
     values: HashMap<Id, Vec<model::SValue>>,
 }
 impl AllLists {

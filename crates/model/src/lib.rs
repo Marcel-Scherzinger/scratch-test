@@ -2,24 +2,28 @@
 pub mod constants;
 
 mod blocks;
-mod error;
+pub mod error;
 mod ext;
 mod interpret_json;
 mod reader;
 mod scopes;
 mod scratch_expr;
-mod types;
 
 pub use blocks::{
-    BlockAttrError, BlockKind, BlockKindError, CmpBlockKind, CmpBlockKindUnit, EventBlockKind,
-    ExprBlockKind, StmtBlockKind, UnsupportedBlockKind,
+    BlockKind, CmpBlockKind, CmpBlockKindUnit, EventBlockKind, ExprBlockKind, StmtBlockKind,
+    UnsupportedBlockKind,
 };
 
-use interpret_json::FormatError;
+pub type Id = std::rc::Rc<str>;
+pub use interpret_json::OpcodeNum;
 
 pub use error::{DocError, Error};
-pub use interpret_json::{Expression, List, Variable};
 pub use reader::json_from_sb3_stream;
 pub use scopes::*;
-pub use scratch_expr::{IntegerOutOfBounds, SValue, SValue as VariableValue, ScratchExpr};
-pub use types::{ArgumentReporterName, DropdownSelection, Id, OpcodeNum, RefBlock};
+pub use scratch_expr::{SValue, SValue as VariableValue, ScratchExpr};
+
+pub mod attr {
+    pub use crate::interpret_json::{
+        ArgumentReporterName, DropdownSelection, Expression, List, RefBlock, Variable,
+    };
+}

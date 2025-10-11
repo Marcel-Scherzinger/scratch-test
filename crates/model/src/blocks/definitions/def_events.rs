@@ -1,4 +1,4 @@
-use crate::DropdownSelection;
+use crate::attr::DropdownSelection;
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]

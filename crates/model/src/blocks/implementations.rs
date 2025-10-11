@@ -1,6 +1,6 @@
 use crate::{
-    BlockKind, BlockKindError,
-    blocks::{ExprBlockKind, ParseKindError},
+    BlockKind,
+    blocks::{BlockKindError, ExprBlockKind, ParseKindError},
     constants,
     interpret_json::{List, Variable},
 };

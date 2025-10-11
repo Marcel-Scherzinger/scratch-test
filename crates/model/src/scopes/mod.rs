@@ -1,9 +1,12 @@
-mod outer;
+pub(crate) mod error;
+mod project_doc;
+mod target;
 mod target_blocks;
 mod target_lists;
 mod target_variables;
 
-pub use outer::*;
+pub use project_doc::*;
+pub use target::*;
 pub use target_blocks::*;
 pub use target_lists::*;
 pub use target_variables::*;

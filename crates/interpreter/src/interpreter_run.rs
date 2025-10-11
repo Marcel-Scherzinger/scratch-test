@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use itertools::Itertools;
-use model::{BlockKind, EventBlockKind, Id, RefBlock, ScratchExpr};
+use model::{BlockKind, EventBlockKind, Id, ScratchExpr, attr::RefBlock};
 
 use crate::{Interpreter, RResult, RunError, StackItem, Starting};
 
@@ -245,8 +245,8 @@ impl Interpreter<Starting> {
         Ok(())
     }
 
-    fn evaluate_expr(&mut self, expr: &model::Expression) -> RResult<model::SValue> {
-        use model::Expression as E;
+    fn evaluate_expr(&mut self, expr: &model::attr::Expression) -> RResult<model::SValue> {
+        use model::attr::Expression as E;
         log::trace!("evaluate expr: {expr:?}");
         match expr {
             E::Lit(val) => Ok(val.clone()),

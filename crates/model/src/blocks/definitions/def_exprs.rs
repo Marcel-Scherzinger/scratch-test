@@ -1,4 +1,4 @@
-use crate::{ArgumentReporterName, DropdownSelection, Expression, List, Variable};
+use crate::attr::{ArgumentReporterName, DropdownSelection, Expression, List, Variable};
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
@@ -10,6 +10,7 @@ super::define_blocks! {
     "argument_reporter_boolean" => ArgumentReporterBoolean {
         (field) value: ArgumentReporterName,
     },
+
     "operator_length" => OperatorLength {
         string: Expression,
     },
@@ -52,11 +53,9 @@ super::define_blocks! {
         from: Expression,
         to: Expression,
     },
-    /*SensingCurrent {
-        currentmenu: DropdownSelection,
-    },*/
-    // SensingTimer,
+
     "sensing_answer" => SensingAnswer,
+
     "data_itemnumoflist" => DataItemnumoflist {
         (field) list: List,
         item: Expression,
@@ -65,17 +64,17 @@ super::define_blocks! {
         (field) list: List,
         index: Expression,
     },
-
     "data_lengthoflist" => DataLengthoflist {
         (field) list: List,
     },
-    // SensingDayssince2000,
 
 
     skip => {
+        // reading a list is not a real block, use this pseudo block
         ("pseudo_read_data_list") RDataList {
             list: List,
         },
+        // reading a variable is not a real block, use this pseudo block
         ("pseudo_read_data_variable") RDataVar {
             variable: Variable,
         }

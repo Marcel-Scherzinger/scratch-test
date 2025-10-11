@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::error::TargetVariablesError;
 use crate::scratch_expr::SValue as VariableValue;
 
 use crate::{Id, interpret_json::Variable};
@@ -10,14 +11,6 @@ pub struct TargetVariables {
     ///
     /// (the value the variable had when pressing save in the editor)
     map: HashMap<Id, (Variable, VariableValue)>,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum TargetVariablesError {
-    #[error("expected object {{...}} for variables of target")]
-    ExpectedObject,
-    #[error("at least one target variable (id={0:?}) has unknown structure")]
-    AtLeastOneInvalid(Id),
 }
 
 impl TargetVariables {

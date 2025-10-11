@@ -1,4 +1,4 @@
-use crate::OpcodeNum;
+use crate::interpret_json::OpcodeNum;
 // I'm not sure what a "shadow" is but it looks like it
 // can be ignored for this use case
 // I assume that it is the value the block would have by default,

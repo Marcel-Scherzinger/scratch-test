@@ -6,5 +6,6 @@ super::define_blocks! {
     "data_showlist" => DataShowlist,
     "data_hidevariable" => DataHidevariable,
     "data_hidelist" => DataHidelist,
+
     "looks_show" => LooksShow,
 }

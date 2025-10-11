@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use super::error::TargetListsError;
 use crate::interpret_json::List;
 use crate::scratch_expr::SValue as VariableValue;
 
@@ -11,14 +12,6 @@ pub struct TargetLists {
     ///
     /// (the value the list had when pressing save in the editor)
     map: HashMap<Id, (List, Vec<VariableValue>)>,
-}
-
-#[derive(Debug, thiserror::Error)]
-pub enum TargetListsError {
-    #[error("expected object {{...}} for lists of target")]
-    ExpectedObject,
-    #[error("at least one target list (id={0:?}) has unknown structure")]
-    AtLeastOneInvalid(Id),
 }
 
 impl TargetLists {

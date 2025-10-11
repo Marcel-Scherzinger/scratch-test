@@ -1,6 +1,7 @@
 use std::io::Read;
 
-use crate::{Error, ProjectDoc, Target, TargetError, error::DocError};
+use crate::error::{DocError, Error, TargetError};
+use crate::{ProjectDoc, Target};
 
 #[allow(unused)]
 pub fn json_from_sb3_stream<R: Read>(

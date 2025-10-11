@@ -51,7 +51,7 @@ pub enum BlockAttrError {
         /// If it was read from "inputs" or "fields"
         source: &'static str,
         /// The exact error that occured
-        error: crate::FormatError,
+        error: crate::error::FormatError,
     },
     #[display(
         "doesn't contain required attribute {attr_name:?} in {source:?} when treated as {treated_as:?}"
@@ -72,6 +72,5 @@ pub(super) enum ParseKindError {
     MissingAttr(super::BlockAttrError),
     #[from(skip)]
     OpcodeUnknown(Rc<str>),
-    #[from(skip)]
     OpcodeUnsupported(UnsupportedBlockKind),
 }

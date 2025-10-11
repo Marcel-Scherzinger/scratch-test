@@ -26,7 +26,7 @@ pub(crate) trait ValueAttributeFromJson: ValueAttrJsonElemtype {
         source_name: &'static str,
         source_object: &serde_json::Map<String, serde_json::Value>,
         key: &'static str,
-    ) -> Result<Self, crate::BlockAttrError>
+    ) -> Result<Self, crate::blocks::BlockAttrError>
     where
         Self: Sized,
     {
@@ -61,7 +61,7 @@ where
         source_name: &'static str,
         source_object: &serde_json::Map<String, serde_json::Value>,
         key: &'static str,
-    ) -> Result<Self, crate::BlockAttrError>
+    ) -> Result<Self, crate::blocks::BlockAttrError>
     where
         Self: Sized,
     {

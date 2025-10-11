@@ -1,17 +1,9 @@
-use crate::{DropdownSelection, Expression, List, RefBlock, Variable};
+use crate::attr::{DropdownSelection, Expression, List, RefBlock, Variable};
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
     pub enum StmtBlockKind (StmtBlockKindUnit):
 
-    "data_setvariableto" => DataSetvariableto {
-        (field) variable: Variable,
-        value: Expression
-    },
-    "data_changevariableby" => DataChangevariableby {
-        (field) variable: Variable,
-        value: Expression,
-    },
     "looks_sayforsecs" => LooksSayforsecs {
         message: Expression,
         secs: Expression,
@@ -26,6 +18,7 @@ super::define_blocks! {
     "looks_say" => LooksSay {
         message: Expression,
     },
+
     "control_wait" => ControlWait {
         duration: Expression,
     },
@@ -51,6 +44,11 @@ super::define_blocks! {
         substack: Option<RefBlock>,
         substack2: Option<RefBlock>,
     },
+    "control_repeat_until" => ControlRepeatuntil {
+        condition: Option<RefBlock>,
+        substack: Option<RefBlock>,
+    },
+
     "data_deleteoflist" => DataDeleteoflist {
         (field) list: List,
         index: Expression,
@@ -68,15 +66,20 @@ super::define_blocks! {
         index: Expression,
         item: Expression,
     },
-    "control_repeat_until" => ControlRepeatuntil {
-        condition: Option<RefBlock>,
-        substack: Option<RefBlock>,
-    },
-    "sensing_askandwait" => SensingAskandwait {
-        question: Expression,
-    },
     "data_addtolist" => DataAddtolist {
         (field) list: List,
         item: Expression,
+    },
+    "data_setvariableto" => DataSetvariableto {
+        (field) variable: Variable,
+        value: Expression
+    },
+    "data_changevariableby" => DataChangevariableby {
+        (field) variable: Variable,
+        value: Expression,
+    },
+
+    "sensing_askandwait" => SensingAskandwait {
+        question: Expression,
     },
 }

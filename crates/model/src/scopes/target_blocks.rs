@@ -1,18 +1,11 @@
 use std::{collections::HashMap, rc::Rc};
 
+use super::error::TargetBlocksError;
 use crate::ext::{FromJsonExt, JsonCtxError};
-use crate::{BlockKind, BlockKindError, Id, UnsupportedBlockKind};
-
-#[derive(Debug, thiserror::Error)]
-pub enum TargetBlocksError {
-    #[error("expected object {{...}} for blocks of target")]
-    ExpectedObject,
-    /* #[error("at least one target block (id={id:?}) has unknown structure (block-error={error})")]
-    AtLeastOneInvalid {
-        id: Id,
-        error: JsonCtxError<BlockKindError>,
-    }, */
-}
+use crate::{
+    Id,
+    blocks::{BlockKind, BlockKindError, UnsupportedBlockKind},
+};
 
 #[derive(Debug, PartialEq)]
 pub struct TargetBlocks {

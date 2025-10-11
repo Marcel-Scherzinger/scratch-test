@@ -11,7 +11,10 @@ pub use stack::StackItem;
 
 use std::rc::Rc;
 
-use model::{BlockWrapper, Id, List, ScratchExpr, TargetBlocks, Variable};
+use model::{
+    BlockWrapper, Id, ScratchExpr, TargetBlocks,
+    attr::{List, Variable},
+};
 
 use crate::{
     AllLists, AllVariables, RResult, RunError, Starting,
@@ -122,11 +125,7 @@ impl State {
     ) -> model::SValue {
         self.requested_randoms.request(from, to)
     }
-    pub fn set_variable(
-        &mut self,
-        variable: &Variable,
-        value: model::SValue,
-    ) -> RResult<()> {
+    pub fn set_variable(&mut self, variable: &Variable, value: model::SValue) -> RResult<()> {
         let mut v = self.all_variables.get_mut(variable)?;
         log::debug!("set variable {} to {value:?}", variable.name());
         *v = value;
@@ -145,10 +144,7 @@ impl State {
     pub fn get_list_elements(&mut self, list: &List) -> RResult<&Vec<model::SValue>> {
         self.all_lists.get(list)
     }
-    pub fn get_mut_list_elements(
-        &mut self,
-        list: &List,
-    ) -> RResult<&mut Vec<model::SValue>> {
+    pub fn get_mut_list_elements(&mut self, list: &List) -> RResult<&mut Vec<model::SValue>> {
         self.all_lists.get_mut(list)
     }
 }
