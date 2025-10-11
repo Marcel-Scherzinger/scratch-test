@@ -5,6 +5,7 @@ use super::{
 };
 use crate::blocks::dt_interface::GetOpcodeUnit;
 
+/// opcode block type is [`BlockKindUnit`]
 #[derive(Debug, derive_more::From, PartialEq)]
 pub enum BlockKind {
     Event(EventBlockKind),
@@ -14,6 +15,7 @@ pub enum BlockKind {
     Noop(NoopStmtBlockKind),
 }
 
+/// main block type is [`BlockKind`]
 #[derive(Debug, derive_more::From, PartialEq, Clone, Copy, derive_more::Display)]
 pub enum BlockKindUnit {
     #[display("{_0}")]

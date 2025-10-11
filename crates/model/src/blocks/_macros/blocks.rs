@@ -34,6 +34,7 @@ macro_rules! define_blocks {
         $(,)?
     ) => {
         $(#[$tmeta])*
+        $(#[doc = concat!("\nopcode block type is [`", stringify!{$unit}, "`]")])?
         $tvis enum $tname {
             $(
                 $(#[$vmeta])*
@@ -105,10 +106,14 @@ macro_rules! define_blocks {
     (;unit;$name: ident;$tvis: vis ($unit: ident);
         $($opcode: literal => $var: ident $({ $($args: ident),* })?),* $(,)?
     ) => {
+        #[doc = concat!("\nmain block type is [`", stringify!{$name}, "`]")]
         #[allow(unused)]
         #[derive(Debug, PartialEq, Clone, Copy, Hash)]
         $tvis enum $unit {
-            $($var),*
+            $(
+                #[doc = concat!{"\n≡ ", $opcode}]
+                $var
+            ),*
         }
         impl crate::blocks::dt_interface::GetOpcodeUnit for $name {
             type Opcode = $unit;
