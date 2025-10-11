@@ -10,9 +10,16 @@ mod scopes;
 mod scratch_expr;
 
 pub use blocks::{
-    BlockKind, CmpBlockKind, CmpBlockKindUnit, EventBlockKind, ExprBlockKind, StmtBlockKind,
+    BlockKind, CmpBlockKind, EventBlockKind, ExprBlockKind, NoopStmtBlockKind, StmtBlockKind,
     UnsupportedBlockKind,
 };
+
+pub mod block_opcodes {
+    pub use crate::blocks::{
+        BlockKindUnit, CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit,
+        NoopStmtBlockKindUnit, StmtBlockKindUnit, UnsupportedBlockKindUnit,
+    };
+}
 
 pub type Id = std::rc::Rc<str>;
 pub use interpret_json::OpcodeNum;

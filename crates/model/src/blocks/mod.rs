@@ -10,14 +10,16 @@ use _macros::define_blocks;
 use error::ParseKindError;
 use parsing::parse_kind;
 
+#[allow(unused)]
 pub use definitions::{
-    BlockKind, CmpBlockKind, EventBlockKind, ExprBlockKind, StmtBlockKind, UnsupportedBlockKind,
+    BlockKind, CmpBlockKind, EventBlockKind, ExprBlockKind, NoopStmtBlockKind, StmtBlockKind,
+    UnsupportedBlockKind,
 };
 
 #[allow(unused)]
 pub use definitions::{
-    BlockKindUnit, CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit, StmtBlockKindUnit,
-    UnsupportedBlockKindUnit,
+    BlockKindUnit, CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit, NoopStmtBlockKindUnit,
+    StmtBlockKindUnit, UnsupportedBlockKindUnit,
 };
 
 pub use error::{BlockAttrError, BlockKindError};
