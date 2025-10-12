@@ -17,6 +17,8 @@ pub enum SValue {
     Int(i64),
     #[debug("{_0:?}")]
     Float(f64),
+    #[debug("{_0:?}")]
+    Bool(bool),
 }
 
 impl SValue {
@@ -24,7 +26,9 @@ impl SValue {
         match (self, other) {
             (Self::Text(a), Self::Text(b)) => a == b,
             (Self::Int(a), Self::Int(b)) => a == b,
+            (Self::Bool(a), Self::Bool(b)) => a == b,
             (Self::Float(a), Self::Float(b)) => a == b,
+
             (Self::Float(_), Self::Int(_)) | (Self::Int(_), Self::Float(_)) => {
                 self.as_float() == other.as_float()
             }
@@ -32,6 +36,19 @@ impl SValue {
                 self.as_int() == other.as_int()
             }
             (Self::Text(_), Self::Float(_)) | (Self::Float(_), Self::Text(_)) => {
+                self.as_float() == other.as_float()
+            }
+            (Self::Text(t), Self::Bool(b)) | (Self::Bool(b), Self::Text(t)) => {
+                if *b {
+                    t.as_ref() == "true"
+                } else {
+                    t.as_ref() == "false"
+                }
+            }
+            (Self::Int(_), Self::Bool(_)) | (Self::Bool(_), Self::Int(_)) => {
+                self.as_int() == other.as_int()
+            }
+            (Self::Float(_), Self::Bool(_)) | (Self::Bool(_), Self::Float(_)) => {
                 self.as_float() == other.as_float()
             }
         }
@@ -70,6 +87,9 @@ impl SValue {
                 on_int(self.as_int(), other.as_int())
             }
             (Self::Text(_), _) | (_, Self::Text(_)) => on_float(self.as_float(), other.as_float()),
+            (Self::Bool(_), Self::Int(_))
+            | (Self::Int(_), Self::Bool(_))
+            | (Self::Bool(_), Self::Bool(_)) => on_int(self.as_int(), other.as_int()),
         }
     }
     pub fn is_best_fit_with_float(&self, other: &SValue) -> bool {
@@ -78,6 +98,9 @@ impl SValue {
             (Self::Int(_), Self::Int(_)) => false,
             (Self::Text(a), Self::Text(b)) => a.contains(".") || b.contains("."),
             (Self::Text(text), _) | (_, Self::Text(text)) => text.contains("."),
+            (Self::Bool(_), Self::Int(_))
+            | (Self::Int(_), Self::Bool(_))
+            | (Self::Bool(_), Self::Bool(_)) => false,
         }
     }
     pub fn is_float(&self) -> bool {
@@ -85,6 +108,7 @@ impl SValue {
             Self::Float(_) => true,
             Self::Int(_) => false,
             Self::Text(text) => text.contains(".") && text.parse::<f64>().is_ok(),
+            Self::Bool(_) => false, // bools fit into ints
         }
     }
     pub fn is_int(&self) -> bool {
@@ -92,6 +116,7 @@ impl SValue {
             Self::Float(_) => false,
             Self::Int(_) => true,
             Self::Text(text) => text.parse::<i64>().is_ok(),
+            Self::Bool(_) => true, // bools fit into ints
         }
     }
 }
@@ -148,6 +173,8 @@ impl ScratchExpr for SValue {
             Self::Text(t) => Cow::Borrowed(t),
             Self::Int(i) => Cow::Owned(i.to_string()),
             Self::Float(f) => Cow::Owned(f.to_string()),
+            Self::Bool(true) => Cow::Borrowed("true"),
+            Self::Bool(false) => Cow::Borrowed("false"),
         }
     }
     // TODO: for over-/underflow the behaviour is different from Scratch
@@ -177,6 +204,8 @@ impl ScratchExpr for SValue {
                     i64::MIN
                 }
             }
+            Self::Bool(true) => 1,
+            Self::Bool(false) => 0,
         }
     }
     fn as_float(&self) -> f64 {
@@ -184,6 +213,8 @@ impl ScratchExpr for SValue {
             Self::Text(t) => t.parse().unwrap_or(0.0),
             Self::Int(i) => *i as f64, // TODO: precision loss?
             Self::Float(f) => *f,
+            Self::Bool(true) => 1.0,
+            Self::Bool(false) => 0.0,
         }
     }
 }
