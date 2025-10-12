@@ -177,7 +177,7 @@ impl ScratchExpr for SValue {
             Self::Bool(false) => Cow::Borrowed("false"),
         }
     }
-    // TODO: for over-/underflow the behaviour is different from Scratch
+    // WARNING: for over-/underflow the behaviour is different from Scratch
     fn as_int(&self) -> i64 {
         match &self {
             Self::Text(t) => t.parse().unwrap_or(0),
@@ -196,11 +196,11 @@ impl ScratchExpr for SValue {
                     0
                 } else if f.is_sign_positive() {
                     // positive infinity
-                    // TODO: behaviour will be different from scratch
+                    // WARNING: behaviour will be different from scratch
                     i64::MAX
                 } else {
                     // negative infinity
-                    // TODO: behaviour will be different from scratch
+                    // WARNING: behaviour will be different from scratch
                     i64::MIN
                 }
             }
