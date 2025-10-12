@@ -349,8 +349,7 @@ impl Interpreter<Starting> {
                         }
                         E::OperatorLength { string } => {
                             let string = self.evaluate_expr(string)?;
-                            // TODO: check for overflow
-                            V::Int(string.as_text().len() as i64)
+                            V::int_or_max(string.as_text().len())
                         }
                         E::OperatorJoin { string1, string2 } => {
                             let string1 = self.evaluate_expr(string1)?;
@@ -360,8 +359,7 @@ impl Interpreter<Starting> {
                             )
                         }
                         E::DataLengthoflist { list } => {
-                            // TODO: range check
-                            V::Int(self.state.get_list_elements(list)?.len() as i64)
+                            V::int_or_max(self.state.get_list_elements(list)?.len())
                         }
                         E::DataItemnumoflist { list, item } => {
                             let item = self.evaluate_expr(item)?;
@@ -371,8 +369,7 @@ impl Interpreter<Starting> {
                                 .find_position(|i| i.scratch_eq(&item))
                                 .map(|(pos, _)| pos + 1)
                                 .unwrap_or(0);
-                            // TODO: range check
-                            V::Int(pos as i64)
+                            V::int_or_max(pos)
                         }
                         E::DataItemoflist { list, index } => {
                             let index = self.evaluate_expr(index)?.as_int();

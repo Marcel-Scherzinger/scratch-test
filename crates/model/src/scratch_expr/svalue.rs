@@ -22,6 +22,15 @@ pub enum SValue {
 }
 
 impl SValue {
+    /// Converts the given [usize] to an integer ([i64]) or yields [i64::MAX]
+    pub fn int_or_max(num: usize) -> Self {
+        if let Ok(v) = num.try_into() {
+            Self::Int(v)
+        } else {
+            Self::Int(i64::MAX)
+        }
+    }
+
     pub fn scratch_eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Text(a), Self::Text(b)) => a == b,
@@ -211,7 +220,7 @@ impl ScratchExpr for SValue {
     fn as_float(&self) -> f64 {
         match &self {
             Self::Text(t) => t.parse().unwrap_or(0.0),
-            Self::Int(i) => *i as f64, // TODO: precision loss?
+            Self::Int(i) => *i as f64, // WARNING: precision loss?
             Self::Float(f) => *f,
             Self::Bool(true) => 1.0,
             Self::Bool(false) => 0.0,
