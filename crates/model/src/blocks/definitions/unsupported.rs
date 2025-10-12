@@ -82,4 +82,15 @@ super::define_blocks! {
     "sensing_touchingobject" => SensingTouchingobject,
     "sensing_touchingobjectmenu" => SensingTouchingobjectmenu,
     "sensing_username" => SensingUsername,
+
+    "pen_changePenColorParamBy" => PenChangePenColorParamBy,
+    "pen_changePenSizeBy" => PenChangePenSizeBy,
+    "pen_clear" => PenClear,
+    "pen_menu_colorParam" => PenMenuColorParam,
+    "pen_penDown" => PenPenDown,
+    "pen_penUp" => PenPenUp,
+    "pen_setPenColorParamTo" => PenSetPenColorParamTo,
+    "pen_setPenColorToColor" => PenSetPenColorToColor,
+    "pen_setPenSizeTo" => PenSetPenSizeTo,
+    "pen_stamp" => PenStamp,
 }

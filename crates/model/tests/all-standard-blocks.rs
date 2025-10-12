@@ -29,7 +29,7 @@ fn read_all_standard_blocks() {
     }
     use itertools::Itertools;
 
-    let sorted_expected = ALL_UNSUPPORTED_BLOCKS
+    let sorted_expected = ALL_UNSUPPORTED_STD_BLOCKS
         .iter()
         .sorted()
         .cloned()
@@ -65,7 +65,7 @@ fn read_all_standard_blocks() {
     )
 }
 
-const ALL_UNSUPPORTED_BLOCKS: [UnsupportedBlockKind; 75] = [
+const ALL_UNSUPPORTED_STD_BLOCKS: [UnsupportedBlockKind; 75] = [
     UnsupportedBlockKind::EventWhenthisspriteclicked,
     UnsupportedBlockKind::EventBroadcast,
     UnsupportedBlockKind::EventBroadcastandwait,
