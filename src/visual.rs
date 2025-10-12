@@ -147,32 +147,7 @@ fn format_report<E: ExerciseTest + ?Sized>(
                 fmt.add_with_warn_prefix(format_args!("{}", msg.msg()));
             }
         }
-
-        /*
-        for (case_num, case) in report.overall_failures().enumerate() {
-            let case_num = case_num + 1;
-            let preset = format_args!("[T{case_num:02}]  {person}");
-
-            let exit_code = if let Some(ec) = case.program_error() {
-                format!("\n{preset} exitcode = {ec}")
-            } else {
-                "".into()
-            };
-
-            let str = format!(
-                "{preset} input    = {:?}\n{preset} output   = {:?}\n{preset} expected = {:?}{exit_code}",
-                todo!(), // case.inputs(),
-                todo!(), // case.program_output(),
-                todo!(), // case.expected_output(),
-            );
-            println!("{}", str.magenta());
-        }*/
     }
-    /*
-    for w in report.warnings() {
-        let str = format!("[WARN] {person} exercise {ex_num}{ex_let}  {}", w.en_msg());
-        println!("{}", str.yellow());
-    }*/
 }
 
 pub fn print_report<E: ExerciseTest + ?Sized>(

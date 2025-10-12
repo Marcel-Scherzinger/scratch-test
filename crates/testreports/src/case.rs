@@ -57,7 +57,9 @@ impl TestCase {
     pub fn program_error(&self) -> Option<ProgramError> {
         use interpreter::RunError as E;
         Some(match self.interpreter.run_error()? {
-            E::WaitTillNeverStops | E::ConditionLoopWithoutBodyNeverStops => {
+            E::WaitTillNeverStops
+            | E::ConditionLoopWithoutBodyNeverStops
+            | E::InfiniteLoopWithoutBodyNeverStops => {
                 // program uses wait till block with condition = true
                 ProgramError::DoesntTerminate
             }
@@ -78,10 +80,7 @@ impl TestCase {
             E::QuestionAskedWithoutAnswer => ProgramError::QuestionWithoutAnswer,
         })
     }
-    pub fn get_required_list(
-        &self,
-        name: &str,
-    ) -> Result<&[model::SValue], Message<TestReport>> {
+    pub fn get_required_list(&self, name: &str) -> Result<&[model::SValue], Message<TestReport>> {
         let mut candidates = self
             .out()
             .all_lists()

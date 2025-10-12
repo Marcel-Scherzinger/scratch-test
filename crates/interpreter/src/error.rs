@@ -22,6 +22,9 @@ pub enum RunError {
     #[error("program reached condition based loop without body and entered it")]
     ConditionLoopWithoutBodyNeverStops,
 
+    #[error("program reached infinite loop without body")]
+    InfiniteLoopWithoutBodyNeverStops,
+
     #[error("found wrong block type: e. g. expected expression and got comparison")]
     UnexpectedBlockKind(Id),
 

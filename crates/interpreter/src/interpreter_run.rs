@@ -149,8 +149,7 @@ impl Interpreter<Starting> {
                         self.state.stack_push(stack_item)?;
                         self.state.stack_push(substack.deref().clone())?;
                     } else {
-                        // TODO: better error variant
-                        return Err(RunError::ConditionLoopWithoutBodyNeverStops);
+                        return Err(RunError::InfiniteLoopWithoutBodyNeverStops);
                     }
                 }
                 S::ControlStop { stop_option } => match stop_option.as_ref() {
