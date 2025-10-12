@@ -253,6 +253,7 @@ impl Interpreter<Starting> {
             E::Lit(val) => Ok(val.clone()),
             E::Var(var) => self.state.get_variable(var),
             E::Blo(id) => {
+                // TODO: what's with unsupported expression blocks?
                 let b = self.state.get_expression_block(id)?;
                 use model::BlockKind as B;
                 use model::ExprBlockKind as E;
@@ -405,6 +406,7 @@ impl Interpreter<Starting> {
     }
 
     fn evaluate_cmp(&mut self, id: Id) -> RResult<bool> {
+        // TODO: what's with unsupported cmp blocks?
         let block = self.state.get_cmp_block(&id)?;
         let kind = block.inner();
         use model::CmpBlockKind as C;
