@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use model::{ProjectDoc, UnsupportedBlockKind, json_from_sb3_stream};
 
 #[test]
-fn read_all_standard_blocks() {
+fn pen_extension_blocks() {
     let mut sb3_file =
         std::fs::File::open("../../sb3/pen-extension-blocks.sb3").expect("file to be present");
 
