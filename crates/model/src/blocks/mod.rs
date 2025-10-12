@@ -23,3 +23,5 @@ pub use definitions::{
 };
 
 pub use error::{BlockAttrError, BlockKindError};
+
+pub(crate) use dt_interface::GetOpcodeUnit;

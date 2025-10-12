@@ -30,7 +30,8 @@ impl Interpreter<Starting> {
             ) => {
                 self.state.stack_push_opt(next)?;
             }
-            K::Noop(_noop) => {
+            K::Noop(_) | K::Unsup(_) => {
+                // TODO: warn or fail on unsupported
                 self.state.stack_push_opt(next)?;
             }
             K::Stmt(stmt) => match &stmt {

@@ -1,7 +1,7 @@
 use super::{CmpBlockKind, EventBlockKind, ExprBlockKind, NoopStmtBlockKind, StmtBlockKind};
 use super::{
     CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit, NoopStmtBlockKindUnit,
-    StmtBlockKindUnit,
+    StmtBlockKindUnit, UnsupportedBlockKind, UnsupportedBlockKindUnit,
 };
 use crate::blocks::dt_interface::GetOpcodeUnit;
 
@@ -13,6 +13,7 @@ pub enum BlockKind {
     Expr(ExprBlockKind),
     Stmt(StmtBlockKind),
     Noop(NoopStmtBlockKind),
+    Unsup(UnsupportedBlockKind),
 }
 
 /// main block type is [`BlockKind`]
@@ -28,6 +29,8 @@ pub enum BlockKindUnit {
     Stmt(StmtBlockKindUnit),
     #[display("{_0}")]
     Noop(NoopStmtBlockKindUnit),
+    #[display("{_0}")]
+    Unsup(UnsupportedBlockKindUnit),
 }
 
 impl GetOpcodeUnit for BlockKind {
@@ -40,6 +43,7 @@ impl GetOpcodeUnit for BlockKind {
             Self::Cmp(u) => u.get_opcode().into(),
             Self::Stmt(u) => u.get_opcode().into(),
             Self::Noop(u) => u.get_opcode().into(),
+            Self::Unsup(u) => u.get_opcode().into(),
         }
     }
 }
