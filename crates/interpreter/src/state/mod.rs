@@ -95,9 +95,12 @@ impl State {
     fn blocks(&self) -> &TargetBlocks {
         self.doc.targets()[self.target_idx].blocks()
     }
-    pub fn get_expression_block(&self, id: &Id) -> RResult<Rc<BlockWrapper>> {
+    pub fn get_expression_block_cmp_allowed(&self, id: &Id) -> RResult<Rc<BlockWrapper>> {
         if let Some(block) = self.doc.targets()[self.target_idx].blocks().get(id) {
-            if matches!(block.inner(), model::BlockKind::Expr(_)) {
+            if matches!(
+                block.inner(),
+                model::BlockKind::Expr(_) | model::BlockKind::Cmp(_)
+            ) {
                 Ok(block.clone())
             } else {
                 Err(RunError::UnexpectedBlockKind(id.clone()))

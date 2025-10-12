@@ -254,11 +254,16 @@ impl Interpreter<Starting> {
             E::Var(var) => self.state.get_variable(var),
             E::Blo(id) => {
                 // TODO: what's with unsupported expression blocks?
-                let b = self.state.get_expression_block(id)?;
+                let b = self.state.get_expression_block_cmp_allowed(id)?;
                 use model::BlockKind as B;
                 use model::ExprBlockKind as E;
                 use model::SValue as V;
-                if let B::Expr(e) = b.inner() {
+
+                // scratch allows comparisons in expressions
+                if let B::Cmp(_) = b.inner() {
+                    self.evaluate_cmp(b.id().clone()).map(model::SValue::Bool)
+                } else if let B::Expr(e) = b.inner() {
+                    // normal expression
                     Ok(match e {
                         E::OperatorRandom { from, to } => {
                             let from = self.evaluate_expr(from)?;
