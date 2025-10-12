@@ -3,7 +3,17 @@ use std::rc::Rc;
 use super::{FormatError, OpcodeNum, get_opcode};
 use crate::Id;
 
-#[derive(derive_more::Debug, PartialEq, derive_more::Deref, derive_more::From)]
+#[derive(
+    derive_more::Debug,
+    PartialEq,
+    derive_more::Deref,
+    derive_more::From,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Clone,
+)]
 #[debug("{_0:?}")]
 pub struct RefBlock(Id);
 

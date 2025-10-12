@@ -6,6 +6,12 @@ macro_rules! impl_string_from {
                 r.into()
             }
         }
+        impl<'a> From<String> for $type {
+            fn from(val: String) -> Self {
+                let r: $inter = val.into();
+                r.into()
+            }
+        }
     };
 }
 pub(crate) use impl_string_from;

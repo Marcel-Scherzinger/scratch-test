@@ -1,3 +1,4 @@
+use super::CmpUsingDisplay;
 use crate::{error::IntegerOutOfBounds, interpret_json::OpcodeNum};
 
 #[derive(Debug, thiserror::Error, PartialEq)]
@@ -33,4 +34,9 @@ pub enum FormatError {
     MissingTextPrim(u8),
     #[error("expected array")]
     ExpectedArray,
+
+    #[error("expected serialised json: {0}")]
+    ExpectedSerialisedJson(CmpUsingDisplay<serde_json::Error>),
+    #[error("expected arrays of equal length")]
+    ArraysMustHaveSameLength,
 }

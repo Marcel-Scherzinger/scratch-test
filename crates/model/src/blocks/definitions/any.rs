@@ -3,11 +3,23 @@ use super::{
     CmpBlockKindUnit, EventBlockKindUnit, ExprBlockKindUnit, NoopStmtBlockKindUnit,
     StmtBlockKindUnit, UnsupportedBlockKind, UnsupportedBlockKindUnit,
 };
+use crate::attr::{ProcedureArgumentDef, RefBlock};
 use crate::blocks::dt_interface::GetOpcodeUnit;
 
 /// opcode block type is [`BlockKindUnit`]
 #[derive(Debug, derive_more::From, PartialEq)]
 pub enum BlockKind {
+    #[from(skip)]
+    ProceduresDefinition {
+        /// block id of matching [Self::ProceduresPrototype] instance
+        custom_block: RefBlock,
+    },
+    #[from(skip)]
+    ProceduresPrototype {
+        proccode: String,
+        arguments: std::rc::Rc<[ProcedureArgumentDef]>,
+    },
+
     Event(EventBlockKind),
     Cmp(CmpBlockKind),
     Expr(ExprBlockKind),
@@ -31,6 +43,10 @@ pub enum BlockKindUnit {
     Noop(NoopStmtBlockKindUnit),
     #[display("{_0}")]
     Unsup(UnsupportedBlockKindUnit),
+    #[display("procedures_prototype")]
+    ProceduresPrototype,
+    #[display("procedures_definition")]
+    ProceduresDefinition,
 }
 
 impl GetOpcodeUnit for BlockKind {
@@ -44,6 +60,8 @@ impl GetOpcodeUnit for BlockKind {
             Self::Stmt(u) => u.get_opcode().into(),
             Self::Noop(u) => u.get_opcode().into(),
             Self::Unsup(u) => u.get_opcode().into(),
+            Self::ProceduresPrototype { .. } => BlockKindUnit::ProceduresPrototype,
+            Self::ProceduresDefinition { .. } => BlockKindUnit::ProceduresDefinition,
         }
     }
 }

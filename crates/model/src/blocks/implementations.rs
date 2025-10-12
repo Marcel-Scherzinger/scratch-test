@@ -31,7 +31,7 @@ impl crate::ext::FromJsonExt<Self, BlockKindError> for BlockKind {
                 }
                 Err(ParseKindError::MissingAttr(error)) => Err(BlockKindError::Missing {
                     block_kind: opcode.to_string(),
-                    error,
+                    error: error.into(),
                 }),
                 Ok(b) => Ok(b),
             }

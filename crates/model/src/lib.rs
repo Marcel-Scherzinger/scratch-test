@@ -31,6 +31,7 @@ pub use scratch_expr::{SValue, SValue as VariableValue, ScratchExpr};
 
 pub mod attr {
     pub use crate::interpret_json::{
-        ArgumentReporterName, DropdownSelection, Expression, List, RefBlock, Variable,
+        ArgumentReporterName, DropdownSelection, Expression, List, ProcedureArgumentDef, RefBlock,
+        Variable,
     };
 }

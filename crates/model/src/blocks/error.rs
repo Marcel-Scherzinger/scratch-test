@@ -1,11 +1,11 @@
-use std::rc::Rc;
+use std::{borrow::Cow, rc::Rc};
 
 use crate::{blocks::definitions::UnsupportedBlockKind, interpret_json::FormatError};
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum BlockKindError {
     #[error("format-error: {0}")]
-    Format(#[from] FormatError),
+    Format(#[from] Box<FormatError>),
     /// The json object is not parsable as a block
     #[error("the provided json object is no valid block")]
     InvalidBlockType,
@@ -37,8 +37,14 @@ pub enum BlockKindError {
     #[error("block (kind={block_kind}) {error}")]
     Missing {
         block_kind: String,
-        error: BlockAttrError,
+        error: Box<BlockAttrError>,
     },
+}
+
+impl From<FormatError> for BlockKindError {
+    fn from(value: FormatError) -> Self {
+        BlockKindError::Format(value.into())
+    }
 }
 
 #[derive(Debug, derive_more::Display, PartialEq)]
@@ -48,7 +54,7 @@ pub enum BlockAttrError {
     )]
     Invalid {
         /// The attribute name
-        attr_name: &'static str,
+        attr_name: Cow<'static, str>,
         /// The way the attribute was interpreted: as expression, block reference, ...
         treated_as: &'static str,
         /// If it was read from "inputs", "fields" or mutation
@@ -61,7 +67,7 @@ pub enum BlockAttrError {
     )]
     Missing {
         /// The attribute name
-        attr_name: &'static str,
+        attr_name: Cow<'static, str>,
         /// The way the attribute was interpreted: as expression, block reference, ...
         treated_as: &'static str,
         /// If it was read from "inputs", "fields" or "mutation"

@@ -1,3 +1,4 @@
+mod _cmp_using_display;
 mod _macros;
 mod number_utils;
 
@@ -7,7 +8,10 @@ mod dropdown;
 mod expression;
 mod format_error;
 mod list;
+mod procedure_argument_def;
 mod variable;
+
+pub use _cmp_using_display::CmpUsingDisplay;
 
 pub use format_error::FormatError;
 
@@ -23,6 +27,7 @@ pub use block_ref::RefBlock;
 pub use dropdown::DropdownSelection;
 pub use expression::Expression;
 pub use list::List;
+pub use procedure_argument_def::ProcedureArgumentDef;
 pub use variable::Variable;
 
 use number_utils::get_maybe_number;

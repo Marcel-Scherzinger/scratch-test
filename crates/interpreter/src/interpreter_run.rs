@@ -40,6 +40,13 @@ impl Interpreter<Starting> {
                 self.state.stack_push_opt(next)?;
             }
             K::Stmt(stmt) => match &stmt {
+                S::ProceduresCall {
+                    proccode,
+                    arguments,
+                } => {
+                    todo!()
+                }
+
                 S::LooksSay { message } => {
                     let message = self.evaluate_expr(message)?;
                     self.state

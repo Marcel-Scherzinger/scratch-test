@@ -3,7 +3,7 @@ use super::{FormatError, List, OpcodeNum, RefBlock, Variable, get_opcode};
 
 use crate::scratch_expr::SValue;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expression {
     Var(Variable),
     Blo(RefBlock),

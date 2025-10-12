@@ -15,12 +15,12 @@ macro_rules! getter {
         if let Some(entry) = &$map.get($key) {
             $crate::blocks::getter!(;; $elemtype, &entry).map_err(|error| {
                 $crate::blocks::BlockAttrError::Invalid {
-                    treated_as: stringify!{$elemtype}, attr_name: $key, source: $source, error
+                    treated_as: stringify!{$elemtype}, attr_name: $key.into(), source: $source, error
                 }
             })
         } else {
             Err($crate::blocks::BlockAttrError::Missing{
-                treated_as: stringify!{$elemtype}, attr_name: $key, source: $source,
+                treated_as: stringify!{$elemtype}, attr_name: $key.into(), source: $source,
             })
         }
     }};
@@ -31,7 +31,7 @@ macro_rules! getter {
                 Err($crate::interpret_json::FormatError::OpcodeNull) => Ok(None),
                 Err(error) => {
                     Err($crate::blocks::BlockAttrError::Invalid {
-                        treated_as: stringify!{$elemtype}, attr_name: $key, source: $source, error
+                        treated_as: stringify!{$elemtype}, attr_name: $key.into(), source: $source, error
                     })
                 }
             }

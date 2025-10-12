@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use crate::interpret_json::FormatError;
 
 #[allow(unused)]
@@ -25,12 +27,12 @@ pub(crate) trait ValueAttributeFromJson: ValueAttrJsonElemtype {
     fn value_from_json_outer(
         source_name: &'static str,
         source_object: &serde_json::Map<String, serde_json::Value>,
-        key: &'static str,
+        key: Cow<'static, str>,
     ) -> Result<Self, crate::blocks::BlockAttrError>
     where
         Self: Sized,
     {
-        if let Some(entry) = &source_object.get(key) {
+        if let Some(entry) = &source_object.get(key.as_ref()) {
             match Self::value_from_json(entry) {
                 Ok(o) => Ok(o),
                 Err(error) => Err(crate::blocks::BlockAttrError::Invalid {
@@ -60,12 +62,12 @@ where
     fn value_from_json_outer(
         source_name: &'static str,
         source_object: &serde_json::Map<String, serde_json::Value>,
-        key: &'static str,
+        key: Cow<'static, str>,
     ) -> Result<Self, crate::blocks::BlockAttrError>
     where
         Self: Sized,
     {
-        if let Some(entry) = &source_object.get(key) {
+        if let Some(entry) = &source_object.get(key.as_ref()) {
             match T::value_from_json(entry) {
                 Ok(o) => Ok(Some(o)),
                 Err(crate::interpret_json::FormatError::OpcodeNull) => Ok(None),

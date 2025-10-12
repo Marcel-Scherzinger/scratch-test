@@ -1,4 +1,6 @@
+use crate::Id;
 use crate::attr::{DropdownSelection, Expression, List, RefBlock, Variable};
+use std::rc::Rc;
 
 super::define_blocks! {
     #[derive(Debug, PartialEq)]
@@ -81,5 +83,14 @@ super::define_blocks! {
 
     "sensing_askandwait" => SensingAskandwait {
         question: Expression,
+    },
+
+    skip => {
+        ("procedures_call")  ProceduresCall {
+            // argument_values: HashMap<Id, Expression>,
+            proccode: Rc<str>,
+            // argumentids: Rc<[Rc<str>]>,
+            arguments: Rc<[(Id, Option<Expression>)]>
+        },
     },
 }

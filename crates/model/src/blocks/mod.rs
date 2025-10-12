@@ -4,10 +4,10 @@ mod definitions;
 mod dt_interface;
 mod error;
 mod implementations;
+mod parse_procedures;
 mod parsing;
 
 use _macros::{define_blocks, getter};
-use definitions::parse_kind;
 use error::ParseKindError;
 use parsing::parse_kind;
 

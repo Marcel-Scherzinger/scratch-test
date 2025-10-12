@@ -158,7 +158,7 @@ macro_rules! define_blocks {
     (;get_key;; , $fname: ident) => { {
         const {
             const_str::convert_ascii_case!{upper, stringify! { $fname } }
-        }
+        }.into()
     } };
 }
 pub(crate) use define_blocks;
