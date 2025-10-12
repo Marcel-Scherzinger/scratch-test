@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use super::Target;
 use crate::error::JsonCtxError;
 use crate::{
@@ -45,5 +47,15 @@ impl ProjectDoc {
         } else {
             Ok(self)
         }
+    }
+
+    pub fn ids_with_blocks(&self) -> impl Iterator<Item = (Id, Rc<str>)> {
+        self.targets()
+            .iter()
+            .flat_map(|t| t.blocks().ids_with_blocks())
+    }
+
+    pub fn su_ids_with_blocks(&self) -> impl Iterator<Item = (Id, Rc<str>)> {
+        self.ids_with_blocks().sorted().unique()
     }
 }

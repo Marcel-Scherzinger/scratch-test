@@ -41,6 +41,21 @@ impl TargetBlocks {
             }
         })
     }
+    pub fn ids_with_blocks(&self) -> impl Iterator<Item = (Id, Rc<str>)> {
+        use crate::blocks::GetOpcodeUnit;
+        self.valid
+            .iter()
+            .map(|(id, bw)| (id.clone(), bw.inner.get_opcode().to_string().into()))
+            .chain(self.invalid.iter().filter_map(|(id, e)| {
+                if let BlockKindError::UnsupportedBlock(n) = e.error() {
+                    Some((id.clone(), n.get_opcode().to_string().into()))
+                } else if let BlockKindError::UnknownBlock(n) = e.error() {
+                    Some((id.clone(), n.clone()))
+                } else {
+                    None
+                }
+            }))
+    }
 }
 
 impl crate::ext::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
