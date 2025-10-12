@@ -27,6 +27,14 @@ pub enum Commands {
         #[command(flatten)]
         part: ExPartSpec,
     },
+    FindIdIntersections {
+        #[arg(required = true)]
+        folder: PathBuf,
+        #[arg(long, short = 's')]
+        no_ignore_siblings: bool,
+        #[arg(long, short = 'm', default_value_t = 0)]
+        min_common: usize,
+    },
 }
 
 #[derive(clap::Args)]

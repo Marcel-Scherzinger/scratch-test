@@ -1,7 +1,13 @@
 mod cli;
 mod visual;
 
-use std::path::PathBuf;
+use colored::Colorize;
+use itertools::Itertools;
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+    rc::Rc,
+};
 
 use clap::Parser;
 use testdata::{ExercisePart, ExerciseTest};
@@ -10,6 +16,83 @@ use visual::print_report;
 use model::*;
 
 use crate::cli::Cli;
+
+fn run_id_intersection(path: PathBuf, ignore_siblings: bool, min_common: usize) {
+    use walkdir::WalkDir;
+
+    let mut tree: BTreeMap<(Rc<str>, Rc<str>), Vec<_>> = BTreeMap::new();
+
+    let mut files = vec![];
+
+    let m_path = path.clone();
+    for (absentry, dispentry) in WalkDir::new(&m_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|entry| entry.path().is_file())
+        .filter(|entry| {
+            entry
+                .path()
+                .extension()
+                .map(|o| o.to_os_string())
+                .and_then(|o| o.to_str().map(|s| s.to_string()))
+                == Some("sb3".to_string())
+        })
+        .flat_map(|entry| {
+            let p = entry.path();
+            p.strip_prefix(&m_path)
+                .map(|o| o.to_path_buf())
+                .map(|rel| (p.to_path_buf(), rel))
+        })
+    {
+        let file_index = files.len();
+
+        if let Ok(mut content) = std::fs::File::open(&absentry)
+            && let Ok(m) = model::ProjectDoc::from_sb3_stream(&mut content)
+        {
+            files.push((absentry, dispentry, m.ids_with_blocks().count()));
+            for (id, opcode) in m.ids_with_blocks() {
+                tree.entry((id, opcode)).or_default().push(file_index);
+            }
+        }
+    }
+
+    let map: HashMap<_, _> = tree
+        .into_iter()
+        .filter(|(_key, v)| v.len() > 1)
+        .flat_map(|(key, v)| {
+            v.into_iter()
+                .tuple_combinations()
+                .map(move |(a, b)| ((a, b), key.clone()))
+        })
+        .into_group_map();
+
+    for ((a, b), common) in map.into_iter().sorted() {
+        if common.len() < min_common {
+            continue;
+        }
+
+        let a_count = format!("{ :2}", files[a].2);
+        let b_count = format!("{ :2}", files[b].2);
+        let common_count = format!("{ :2}", common.len());
+        let a_disp = files[a].1.to_string_lossy();
+        let b_disp = files[b].1.to_string_lossy();
+
+        let are_siblings = files[a].0.parent() == files[b].0.parent();
+
+        if are_siblings && ignore_siblings {
+            continue;
+        }
+
+        println!(
+            "{} / {} \\ {} (A/shared\\B) {} {}",
+            a_count.blue(),
+            common_count.magenta(),
+            b_count.yellow(),
+            a_disp.blue(),
+            b_disp.yellow()
+        );
+    }
+}
 
 fn run_single(file: PathBuf, exercise_number: u8, exercise_part: ExercisePart) {
     let tester: std::rc::Rc<dyn ExerciseTest> = match (exercise_number, exercise_part) {
@@ -151,5 +234,10 @@ fn main() {
             };
             run_single(file, exercise, part)
         }
+        cli::Commands::FindIdIntersections {
+            folder,
+            no_ignore_siblings,
+            min_common,
+        } => run_id_intersection(folder, !no_ignore_siblings, min_common),
     }
 }
