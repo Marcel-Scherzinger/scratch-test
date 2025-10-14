@@ -30,10 +30,27 @@ impl<'a> PersonFormatter<'a> {
         }
     }
     fn print_failed_test(&mut self, idx: usize, failed: &testreports::TestCase) {
-        self.add_with_test_prefix(
-            idx + 1,
-            format_args!("          input = {:?}", failed.out().predefined_answers()),
-        );
+        let input = failed.out().predefined_answers();
+
+        let tagged_input = input
+            .usage_tagged_answers()
+            .map(|(val, used)| {
+                if used {
+                    format!("{val:?}").normal()
+                } else {
+                    format!("{val:?}").bold().underline()
+                }
+            })
+            .join(", ");
+
+        self.add_with_test_prefix(idx + 1, format_args!("          input = [{tagged_input}]"));
+
+        if input.has_unused_answers() {
+            self.add_with_test_prefix(
+                idx + 1,
+                format_args!("unused input no.= {}", input.unused_answers().len()),
+            );
+        }
         self.add_with_test_prefix(
             idx + 1,
             format_args!(

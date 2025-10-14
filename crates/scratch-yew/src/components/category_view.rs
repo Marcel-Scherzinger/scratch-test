@@ -75,7 +75,7 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
         <tr>
             <td>{"predefined answers: "}</td>
             <td>
-                {format!("{:?}", case.out().predefined_answers())}
+                {format!("{}", case.out().predefined_answers())}
             </td>
         </tr>
     );

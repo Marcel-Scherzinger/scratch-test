@@ -41,7 +41,8 @@ impl PredefinedAnswers {
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, derive_more::Display, PartialEq, Clone)]
+#[display("{values:?}")]
 pub struct PredefinedAnswersReport {
     values: Rc<[model::SValue]>,
     next_pos: usize,
@@ -65,6 +66,12 @@ impl PredefinedAnswersReport {
     }
     pub fn has_used_answers(&self) -> bool {
         !self.used_answers().is_empty()
+    }
+    pub fn usage_tagged_answers(&self) -> impl Iterator<Item = (&model::SValue, bool)> {
+        self.values()
+            .iter()
+            .enumerate()
+            .map(|(idx, value)| (value, idx < self.next_pos))
     }
 }
 
