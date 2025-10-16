@@ -26,7 +26,7 @@ pub fn exercise(ExerciseProps { exercise }: &ExerciseProps) -> Html {
 
         let mut handle = content.as_slice();
 
-        let doc = match model::ProjectDoc::from_sb3_stream(&mut handle) {
+        let doc = match model::ProjectDoc::from_tagged_sb3_stream(&mut handle, &name) {
             Ok(doc) => doc,
             Err(err) => {
                 log::error!("invalid sb3 file (model failed): {err:?}");

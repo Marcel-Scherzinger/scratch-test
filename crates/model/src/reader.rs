@@ -5,9 +5,11 @@ use crate::error::{DocError, Error, TargetError};
 use crate::{ProjectDoc, Target};
 
 #[allow(unused)]
-pub fn json_from_sb3_stream<R: Read>(
+pub fn json_from_sb3_stream<R: Read, T: std::fmt::Display + Sized>(
     handle: &mut R,
+    tag: Option<T>,
 ) -> Result<serde_json::Value, Box<dyn std::error::Error>> {
+    let tag = tag.map(|s| format!(" {s}")).unwrap_or_default();
     loop {
         match zip::read::read_zipfile_from_stream(handle) {
             Ok(Some(file)) => {
@@ -18,7 +20,7 @@ pub fn json_from_sb3_stream<R: Read>(
             }
             Ok(None) => Err("no document")?,
             Err(e) => {
-                log::error!("Error encountered while reading sb3: {e:?}");
+                log::error!("Error encountered while reading sb3{tag}: {e:?}");
                 Err(DocError::Io(e.into()))?
             }
         }
@@ -46,8 +48,10 @@ impl ProjectDoc {
             }
         }
     }
-
-    pub fn from_sb3_stream<R: Read>(handle: &mut R) -> Result<Self, DocError> {
+    fn _inner_from_sb3_stream<R: Read>(
+        handle: &mut R,
+        suffix: &str,
+    ) -> Result<ProjectDoc, DocError> {
         loop {
             match zip::read::read_zipfile_from_stream(handle) {
                 Ok(Some(file)) => {
@@ -58,11 +62,21 @@ impl ProjectDoc {
                 }
                 Ok(None) => Err(DocError::NoDocument)?,
                 Err(e) => {
-                    log::error!("Error encountered while reading sb3: {e:?}");
+                    log::error!("Error encountered while reading sb3{suffix}: {e:?}");
                     Err(DocError::Io(e.into()))?
                 }
             }
         }
+    }
+
+    pub fn from_tagged_sb3_stream<R: Read, T: std::fmt::Display>(
+        handle: &mut R,
+        tag: &T,
+    ) -> Result<Self, DocError> {
+        Self::_inner_from_sb3_stream(handle, &format!(" {tag}"))
+    }
+    pub fn from_sb3_stream<R: Read>(handle: &mut R) -> Result<Self, DocError> {
+        Self::_inner_from_sb3_stream(handle, "")
     }
     pub fn from_json(doc: serde_json::Value) -> Result<ProjectDoc, Error> {
         use crate::ext::WithJsonContextExt;
