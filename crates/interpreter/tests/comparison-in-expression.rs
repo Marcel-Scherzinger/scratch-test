@@ -1,15 +1,11 @@
 use interpreter::InterpreterBuilder;
 use itertools::Itertools;
-use model::{ProjectDoc, json_from_sb3_stream};
+use model::ProjectDoc;
 
 #[test]
 fn comparison_in_expression() {
-    let mut sb3_file =
-        std::fs::File::open("../../sb3/comparison-in-expression.sb3").expect("file to be present");
-
-    let json_data = json_from_sb3_stream(&mut sb3_file).unwrap();
-
-    let res = ProjectDoc::from_json(json_data).expect("valid document");
+    let res = ProjectDoc::from_sb3_file("../../sb3/comparison-in-expression.sb3")
+        .expect("valid document");
 
     let doc = match res.ensure_no_invalid_blocks() {
         Ok(doc) => doc,

@@ -46,9 +46,7 @@ fn run_id_intersection(path: PathBuf, ignore_siblings: bool, min_common: usize) 
     {
         let file_index = files.len();
 
-        if let Ok(mut content) = std::fs::File::open(&absentry)
-            && let Ok(m) = model::ProjectDoc::from_sb3_stream(&mut content)
-        {
+        if let Ok(m) = model::ProjectDoc::from_sb3_file(&absentry) {
             files.push((absentry, dispentry, m.ids_with_blocks().count()));
             for (id, opcode) in m.ids_with_blocks() {
                 tree.entry((id, opcode)).or_default().push(file_index);
@@ -102,16 +100,12 @@ fn run_single(file: PathBuf, exercise_number: u8, exercise_part: ExercisePart) {
         _ => todo!(),
     };
 
-    if let Ok(mut content) = std::fs::File::open(&file) {
-        let p = ProjectDoc::from_sb3_stream(&mut content);
-        let file_name = file
-            .file_name()
-            .map(|os| os.to_string_lossy().clone())
-            .unwrap_or_default();
-        print_report(&file_name, tester.as_ref(), p, &file_name);
-    } else {
-        log::error!("Unable to open file {file:?}")
-    }
+    let p = ProjectDoc::from_sb3_file(&file);
+    let file_name = file
+        .file_name()
+        .map(|os| os.to_string_lossy().clone())
+        .unwrap_or_default();
+    print_report(&file_name, tester.as_ref(), p, &file_name);
 }
 fn run_submissions(path: PathBuf, exercise_number: u8) {
     let exercise_tests: Vec<Option<std::rc::Rc<dyn ExerciseTest>>> =
@@ -189,20 +183,16 @@ fn run_submissions(path: PathBuf, exercise_number: u8) {
 
         for (tester, path) in parts {
             if let Some(tester) = tester {
-                if let Ok(mut content) = std::fs::File::open(path) {
-                    let p = ProjectDoc::from_sb3_stream(&mut content);
-                    print_report(
-                        person_name,
-                        tester.as_ref(),
-                        p,
-                        &path
-                            .file_name()
-                            .map(|s| s.to_string_lossy())
-                            .unwrap_or_default(),
-                    );
-                } else {
-                    log::error!("Unable to open file {path:?}")
-                }
+                let p = ProjectDoc::from_sb3_file(path);
+                print_report(
+                    person_name,
+                    tester.as_ref(),
+                    p,
+                    &path
+                        .file_name()
+                        .map(|s| s.to_string_lossy())
+                        .unwrap_or_default(),
+                );
             } else {
                 log::info!("No test runner for {exercise_number} available");
             }

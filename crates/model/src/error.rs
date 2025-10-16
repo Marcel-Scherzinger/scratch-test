@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 pub use crate::ext::JsonCtxError;
 pub use crate::interpret_json::FormatError;
 pub use crate::scopes::error::{
@@ -40,4 +42,6 @@ pub enum DocError {
     Io(#[from] Box<dyn std::error::Error>),
     #[error("invalid json document: {0}")]
     Json(#[from] serde_json::Error),
+    #[error("file {0:?} read error: {1}")]
+    FileRead(PathBuf, std::io::Error),
 }

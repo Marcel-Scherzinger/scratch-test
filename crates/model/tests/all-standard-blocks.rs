@@ -4,12 +4,8 @@ use model::{ProjectDoc, UnsupportedBlockKind, json_from_sb3_stream};
 
 #[test]
 fn read_all_standard_blocks() {
-    let mut sb3_file =
-        std::fs::File::open("../../sb3/all-predefined-blocks.sb3").expect("file to be present");
-
-    let json_data = json_from_sb3_stream(&mut sb3_file).unwrap();
-
-    let res = ProjectDoc::from_json(json_data).expect("valid document");
+    let res =
+        ProjectDoc::from_sb3_file("../../sb3/all-predefined-blocks.sb3").expect("valid document");
 
     let doc = match res.ensure_no_invalid_blocks() {
         Ok(doc) => {

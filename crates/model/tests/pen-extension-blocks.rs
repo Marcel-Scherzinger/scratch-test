@@ -7,7 +7,11 @@ fn pen_extension_blocks() {
     let mut sb3_file =
         std::fs::File::open("../../sb3/pen-extension-blocks.sb3").expect("file to be present");
 
-    let json_data = json_from_sb3_stream(&mut sb3_file).unwrap();
+    let json_data = json_from_sb3_stream(
+        &mut sb3_file,
+        Some("../../sb3/pen-extension-blocks.sb3".to_string()),
+    )
+    .unwrap();
 
     let res = ProjectDoc::from_json(json_data).expect("valid document");
 

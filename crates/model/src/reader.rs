@@ -1,4 +1,5 @@
 use std::io::Read;
+use std::path::Path;
 
 use crate::error::{DocError, Error, TargetError};
 use crate::{ProjectDoc, Target};
@@ -25,6 +26,27 @@ pub fn json_from_sb3_stream<R: Read>(
 }
 
 impl ProjectDoc {
+    pub fn from_sb3_file(path: impl AsRef<Path>) -> Result<Self, DocError> {
+        let path = path.as_ref();
+        let mut handle =
+            std::fs::File::open(path).map_err(|err| DocError::FileRead(path.to_path_buf(), err))?;
+        loop {
+            match zip::read::read_zipfile_from_stream(&mut handle) {
+                Ok(Some(file)) => {
+                    if file.name().to_lowercase().ends_with(".json") {
+                        let value: serde_json::Value = serde_json::from_reader(file)?;
+                        return Ok(Self::from_json(value)?);
+                    }
+                }
+                Ok(None) => Err(DocError::NoDocument)?,
+                Err(e) => {
+                    log::error!("Error encountered while reading sb3 {path:?}: {e:?}");
+                    Err(DocError::Io(e.into()))?
+                }
+            }
+        }
+    }
+
     pub fn from_sb3_stream<R: Read>(handle: &mut R) -> Result<Self, DocError> {
         loop {
             match zip::read::read_zipfile_from_stream(handle) {

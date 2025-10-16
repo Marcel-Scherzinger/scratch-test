@@ -178,9 +178,14 @@ pub fn print_report<E: ExerciseTest + ?Sized>(
     let mut fmt = PersonFormatter::new(person, (ex_num, ex_let));
     let doc = match doc {
         Ok(doc) => doc,
+        Err(DocError::FileRead(path, err)) => {
+            fmt.add_complete_crit("failed to read sb3 file");
+            log::error!("failed to read sb3 file {path:?}: {err}");
+            return;
+        }
         Err(err) => {
             fmt.add_complete_crit("invalid program, maybe unsupported block");
-            log::error!("{err:#?}");
+            log::error!("({person}) ({file_name:?}) {err:#?}");
             return;
         }
     };
