@@ -10,7 +10,7 @@ pub enum ExercisePart {
 use testreports::*;
 
 pub const WARN_COUNTER_LOOP: Message<TestReport> =
-    testreports::Message::cwarning("you shouldn't use counter based loops");
+    testreports::Message::cwarning("you shouldn't use counter-based loops");
 pub const HINT_NO_EXTRA_SPACE: Message<TestReport> =
     Message::chint("your output doesn't separate the result with a space from the prefix text");
 
