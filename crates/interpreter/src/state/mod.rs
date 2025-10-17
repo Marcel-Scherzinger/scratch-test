@@ -4,6 +4,8 @@ mod interpreter_report;
 mod randoms;
 mod stack;
 
+pub(crate) use model::ProcedureId;
+
 pub use interpreter_report::InterpreterReport;
 
 pub use actions::{ActionEntry, OutputAction};
@@ -149,5 +151,12 @@ impl State {
     }
     pub fn get_mut_list_elements(&mut self, list: &List) -> RResult<&mut Vec<model::SValue>> {
         self.all_lists.get_mut(list)
+    }
+
+    pub fn get_procedure(&mut self, id: ProcedureId) -> RResult<&model::Procedure> {
+        self.doc.targets()[self.target_idx]
+            .procedures()
+            .get(&id)
+            .ok_or(RunError::ReachedUnknownProcedure)
     }
 }

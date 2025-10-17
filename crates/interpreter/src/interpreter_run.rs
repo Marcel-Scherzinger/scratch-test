@@ -3,7 +3,7 @@ use std::ops::Deref;
 use itertools::Itertools;
 use model::{BlockKind, EventBlockKind, Id, ScratchExpr, attr::RefBlock};
 
-use crate::{Interpreter, RResult, RunError, StackItem, Starting};
+use crate::{Interpreter, ProcedureId, RResult, RunError, StackItem, Starting};
 
 impl Interpreter<Starting> {
     pub(crate) fn internal_start(&mut self) -> RResult<()> {
@@ -44,6 +44,9 @@ impl Interpreter<Starting> {
                     proccode,
                     arguments,
                 } => {
+                    let procedure_id = ProcedureId::generate_from_fields(proccode, arguments);
+                    let prototype = self.state.get_procedure(procedure_id)?;
+                    println!("{prototype:?}\n\n{arguments:#?}");
                     todo!()
                 }
 
