@@ -1,6 +1,6 @@
 use super::error::TargetError;
 use crate::ext::{FromJsonExt, WithJsonContextExt};
-use crate::{Error, TargetBlocks, TargetLists, TargetVariables};
+use crate::{Error, TargetBlocks, TargetLists, TargetProcedures, TargetVariables};
 
 /// A target is a sprite or the background
 #[derive(Debug, derive_getters::Getters, PartialEq)]
@@ -12,6 +12,7 @@ pub struct Target {
     // broadcasts: (), // not implemented yet
     // comments: (),   // not implemented yet
     blocks: TargetBlocks,
+    procedures: TargetProcedures,
 }
 
 impl Target {
@@ -28,12 +29,15 @@ impl Target {
         let variables = TargetVariables::from_json_with_ctx(&value["variables"])?;
         let lists = TargetLists::from_json_with_ctx(&value["lists"])?;
         let blocks = TargetBlocks::from_json_without_ctx(&value["blocks"])?;
+        let procedures = TargetProcedures::new(&blocks);
+
         Ok(Self {
             is_stage,
             name,
             variables,
             lists,
             blocks,
+            procedures,
         })
     }
 }
