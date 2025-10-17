@@ -69,7 +69,8 @@ impl TestCase {
             | E::ReachedUnknownBlock(_)
             | E::UnexpectedNestingOfBlocks
             | E::UnsupportedMathOperator(_)
-            | E::UnexpectedBlockKind(_) => {
+            | E::UnexpectedBlockKind(_)
+            | E::ReachedUnknownProcedure => {
                 // log::error!("Scratch error: {err} ({err:?})");
                 ProgramError::ScratchInteractionError
             }

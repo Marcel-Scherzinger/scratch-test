@@ -38,5 +38,8 @@ pub enum RunError {
     WaitTillNeverStops,
     #[error("program asked questions but no more answers were predefined")]
     QuestionAskedWithoutAnswer,
+
+    #[error("program tried to call unknown procedure -- could be caused by invalid file")]
+    ReachedUnknownProcedure,
 }
 pub type RResult<T> = Result<T, RunError>;
