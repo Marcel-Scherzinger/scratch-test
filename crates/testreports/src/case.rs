@@ -66,10 +66,12 @@ impl TestCase {
             E::AccessUnknownList(_)
             | E::AccessUnknownVariable(_)
             | E::PopOnEmptyProgramStack
+            | E::PopOnEmptyArgumentFramesStack
             | E::ReachedUnknownBlock(_)
             | E::UnexpectedNestingOfBlocks
             | E::UnsupportedMathOperator(_)
             | E::UnexpectedBlockKind(_)
+            | E::InvalidProcedureCallArguments
             | E::ReachedUnknownProcedure => {
                 // log::error!("Scratch error: {err} ({err:?})");
                 ProgramError::ScratchInteractionError

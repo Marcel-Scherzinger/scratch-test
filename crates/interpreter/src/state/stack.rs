@@ -9,6 +9,8 @@ pub enum StackItem<T> {
     Normal(T),
     #[from(skip)]
     CountLoop(T, usize),
+    #[from(skip)]
+    PopArgumentFrame(T),
 }
 impl<T> StackItem<T> {
     pub fn map<O, F>(self, func: F) -> StackItem<O>
@@ -17,12 +19,13 @@ impl<T> StackItem<T> {
     {
         match self {
             Self::Normal(t) => StackItem::Normal(func(t)),
+            Self::PopArgumentFrame(t) => StackItem::PopArgumentFrame(func(t)),
             Self::CountLoop(t, remaining) => StackItem::CountLoop(func(t), remaining),
         }
     }
     pub fn value(&self) -> &T {
         match self {
-            Self::Normal(t) => t,
+            Self::Normal(t) | Self::PopArgumentFrame(t) => t,
             Self::CountLoop(t, _) => t,
         }
     }

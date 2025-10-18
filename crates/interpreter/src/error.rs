@@ -13,6 +13,9 @@ pub enum RunError {
     #[error("pop called on empty program stack")]
     PopOnEmptyProgramStack,
 
+    #[error("pop called on empty argument frames stack")]
+    PopOnEmptyArgumentFramesStack,
+
     #[error("program executed more than allowed maximum number of statements")]
     AllowedNumberOfExecutedStmtsExceeded,
 
@@ -41,5 +44,8 @@ pub enum RunError {
 
     #[error("program tried to call unknown procedure -- could be caused by invalid file")]
     ReachedUnknownProcedure,
+
+    #[error("arguments in procedure call don't match procedure prototype")]
+    InvalidProcedureCallArguments,
 }
 pub type RResult<T> = Result<T, RunError>;

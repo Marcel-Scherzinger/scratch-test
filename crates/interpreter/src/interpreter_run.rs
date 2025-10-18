@@ -3,7 +3,9 @@ use std::ops::Deref;
 use itertools::Itertools;
 use model::{BlockKind, EventBlockKind, Id, ScratchExpr, attr::RefBlock};
 
-use crate::{Interpreter, ProcedureId, RResult, RunError, StackItem, Starting};
+use crate::{
+    Interpreter, ProcedureArgumentsFrame, ProcedureId, RResult, RunError, StackItem, Starting,
+};
 
 impl Interpreter<Starting> {
     pub(crate) fn internal_start(&mut self) -> RResult<()> {
@@ -25,7 +27,9 @@ impl Interpreter<Starting> {
         use BlockKind as K;
         use model::StmtBlockKind as S;
         match &kind {
-            K::ProceduresDefinition { custom_block } => todo!(),
+            K::ProceduresDefinition { custom_block } => {
+                self.state.stack_push_opt(next)?;
+            }
             K::ProceduresPrototype {
                 proccode,
                 arguments,
@@ -44,10 +48,45 @@ impl Interpreter<Starting> {
                     proccode,
                     arguments,
                 } => {
-                    let procedure_id = ProcedureId::generate_from_fields(proccode, arguments);
-                    let prototype = self.state.get_procedure(procedure_id)?;
-                    println!("{prototype:?}\n\n{arguments:#?}");
-                    todo!()
+                    match stack_item {
+                        // call will be initiated
+                        StackItem::Normal(_) => {
+                            let procedure_id =
+                                ProcedureId::generate_from_fields(proccode, arguments);
+
+                            let evaluated_arguments: Result<Vec<_>, RunError> = arguments
+                                .iter()
+                                .map(|(id, expr)| {
+                                    Ok::<_, RunError>((
+                                        id.clone(),
+                                        expr.as_ref().map(|e| self.evaluate_expr(e)).transpose()?,
+                                    ))
+                                })
+                                .collect();
+
+                            let prototype = self.state.get_procedure(procedure_id)?;
+
+                            let frame = ProcedureArgumentsFrame::for_procedure(
+                                prototype,
+                                &evaluated_arguments?,
+                            )?;
+                            println!("{frame:#?}");
+                            let definition_block_id = prototype.definition_block().id().clone();
+
+                            self.state.stack_push_opt(next)?;
+                            // IMPORTANT: prepare cleanup on stack
+                            self.state
+                                .stack_push(StackItem::PopArgumentFrame(block.id().clone()))?;
+                            self.state.procedure_arguments_push_frame(frame)?;
+                            self.state.stack_push(definition_block_id)?;
+                        }
+                        // call will be cleaned up (it is now after the exit of the call)
+                        StackItem::PopArgumentFrame(_) => {
+                            self.state.procedure_arguments_pop_frame()?;
+                        }
+                        // only possible for loops
+                        StackItem::CountLoop(_, _) => unreachable!(),
+                    }
                 }
 
                 S::LooksSay { message } => {
@@ -180,6 +219,8 @@ impl Interpreter<Starting> {
                             self.evaluate_expr(times)?.as_int().max(0) as usize
                         }
                         StackItem::CountLoop(_, remaining) => remaining,
+                        // in this case the block has to be a procedures call
+                        StackItem::PopArgumentFrame(_) => unreachable!(),
                     };
 
                     match remaining {
@@ -410,8 +451,12 @@ impl Interpreter<Starting> {
                             })
                         }
 
-                        E::ArgumentReporterStringNumber { value }
-                        | E::ArgumentReporterBoolean { value } => todo!(),
+                        E::ArgumentReporterStringNumber { value } => self
+                            .state
+                            .procedure_arguments_nearest_string_number(value)?,
+                        E::ArgumentReporterBoolean { value } => {
+                            self.state.procedure_arguments_nearest_boolean(value)?
+                        }
                     })
                 } else {
                     Err(crate::RunError::UnexpectedBlockKind(id.deref().clone()))
@@ -429,7 +474,10 @@ impl Interpreter<Starting> {
         log::trace!("evaluate cmp: {kind:?}");
         if let model::BlockKind::Cmp(kind) = kind {
             Ok(match kind {
-                C::ArgumentReporterBoolean { value } => todo!(),
+                C::ArgumentReporterBoolean { value } => self
+                    .state
+                    .procedure_arguments_nearest_boolean(value)?
+                    .as_bool(),
                 C::OperatorOr { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.deref().clone())?;
                     let operand2 = self.evaluate_cmp(operand2.deref().clone())?;

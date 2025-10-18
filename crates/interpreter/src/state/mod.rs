@@ -1,12 +1,14 @@
 mod actions;
 mod answers;
 mod interpreter_report;
+mod procedure_arguments;
 mod randoms;
 mod stack;
 
 pub(crate) use model::ProcedureId;
 
 pub use interpreter_report::InterpreterReport;
+pub use procedure_arguments::ProcedureArgumentsFrame;
 
 pub use actions::{ActionEntry, OutputAction};
 pub use stack::StackItem;
@@ -46,6 +48,7 @@ pub struct State {
     all_variables: AllVariables,
     target_idx: usize,
     program_stack: Vec<StackItem<Id>>,
+    procedure_arguments_frames: Vec<ProcedureArgumentsFrame>,
     executed_stmts: usize,
     limits: Limits,
     actions: Vec<ActionEntry>,
@@ -79,6 +82,7 @@ impl State {
                 used_counter_loop: false,
             },
             requested_randoms: RandomNumbers::new(),
+            procedure_arguments_frames: vec![],
         }
     }
     /// This function may shut down the execution if the program exceeds
