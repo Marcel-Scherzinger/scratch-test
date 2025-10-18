@@ -70,7 +70,7 @@ impl Interpreter<Starting> {
                                 prototype,
                                 &evaluated_arguments?,
                             )?;
-                            println!("{frame:#?}");
+                            log::trace!("Add procedure arguments frame: {frame:?}");
                             let definition_block_id = prototype.definition_block().id().clone();
 
                             self.state.stack_push_opt(next)?;
