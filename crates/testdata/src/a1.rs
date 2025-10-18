@@ -25,7 +25,7 @@ impl ExerciseTest for A1a {
     fn run(&self, interp: &interpreter::InterpreterBuilder) -> TestReport {
         let mut report = TestReport::new();
         report.add_category("", |tests| {
-            run_with(interp, tests, Some((1, 5)));
+            run_with(interp, tests, None);
         });
         report
     }
