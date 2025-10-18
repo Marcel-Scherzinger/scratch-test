@@ -128,6 +128,23 @@ impl SValue {
             Self::Bool(_) => true, // bools fit into ints
         }
     }
+    pub fn as_bool(&self) -> bool {
+        match self {
+            Self::Int(i) => i != &0,
+            Self::Float(f) => f != &0.0,
+            Self::Text(t) => {
+                if t.as_ref() == "" || t.as_ref() == "false" {
+                    false
+                } else if t.as_ref() == "true" {
+                    true
+                } else {
+                    // this behaviour is unsure as it shouldn't occur in Scratch
+                    true
+                }
+            }
+            Self::Bool(b) => *b,
+        }
+    }
 }
 
 impl TryFrom<serde_json::Number> for SValue {
