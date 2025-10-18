@@ -1,6 +1,6 @@
 use std::collections::{BTreeSet, HashMap};
 
-use model::{ProjectDoc, UnsupportedBlockKind, json_from_sb3_stream};
+use model::{ProjectDoc, UnsupportedBlockKind};
 
 #[test]
 fn read_all_standard_blocks() {
