@@ -1,13 +1,16 @@
+/// defines an enum that models a group of block kinds with different
+/// attributes corresponding to the file format
 macro_rules! define_blocks {
     (
-        $(#[$tmeta: meta])*
-        $tvis: vis enum $tname: ident  $(($unit: ident))?:
+        $(#[$tmeta: meta])* // meta attributes on the whole enum
+        $tvis: vis enum $tname: ident  $(($unit: ident))?: // optional unit version
 
         $(
-            $(#[$vmeta: meta])*
+            // one comma-separated entry for each enum variant
+            $(#[$vmeta: meta])* // meta attributes on this variant
             $opcode: literal => $var: ident $({
                 $(
-                    $(#[$fmeta: meta])*
+                    $(#[$fmeta: meta])* // meta attributes on this field
                     $(($fsrc: ident))?  $fname : ident $($fkey: literal)? : $ftype: ty
                 ),*
                 $(,)?
@@ -16,6 +19,8 @@ macro_rules! define_blocks {
 
         $(
         ,
+            // some blocks shouldn't have an equivalent in the file format,
+            // such blocks can be placed under skip
             skip => {
                 $(
                     $(#[$skipvmeta: meta])*
@@ -33,14 +38,19 @@ macro_rules! define_blocks {
 
         $(,)?
     ) => {
+        // add meta attributes for enum and
+        // automated comment to reference unit variant if there is one
+
         $(#[$tmeta])*
         $(#[doc = concat!("\nopcode block type is [`", stringify!{$unit}, "`]")])?
         $tvis enum $tname {
             $(
+                // generate variants and comment for equivalent opcode (in file format)
                 $(#[$vmeta])*
                 #[doc = concat!{"\n≡ ", $opcode}]
                 $var $({
                     $(
+                        // generate fields with provided attributes
                         $(#[$fmeta])*
                         $fname: $ftype
                     ),*
@@ -48,6 +58,7 @@ macro_rules! define_blocks {
             ),*
             $(,
                 $(
+                    // same for variants under skip
                     $(#[$skipvmeta])*
                     $skipvar $( {
                         $(
@@ -60,6 +71,7 @@ macro_rules! define_blocks {
 
         }
 
+        // generate unit block enum
         crate::blocks::define_blocks!(
             ;unit;$tname;$tvis ($($unit)?);
             $(
@@ -76,6 +88,7 @@ macro_rules! define_blocks {
             )?
         );
 
+        // generate from_json_block impl as match for all variants
         impl crate::blocks::dt_interface::FromJsonBlock for $tname {
             #[allow(unused)]
             fn from_json_block(
@@ -90,8 +103,13 @@ macro_rules! define_blocks {
                             $opcode => Self::$var $({
                                 $(
                                     $fname: <$ftype as ValueAttributeFromJson>::value_from_json_outer(
+                                        // string literal naming the field source
                                         crate::blocks::define_blocks!(;get_obj_str;$($fsrc)?; inputs, fields),
+                                        // selects the correct source object
                                         crate::blocks:: define_blocks!(;get_obj;$($fsrc)?; inputs, fields),
+                                        // use provided fkey or use uppercased fname as fkey
+                                        // (the key in the file format is usally the uppercase
+                                        // version of fname)
                                         crate::blocks:: define_blocks!(;get_key;; $($fkey)?, $fname)
                                     )?,
                                 )*
@@ -106,6 +124,7 @@ macro_rules! define_blocks {
     (;unit;$name: ident;$tvis: vis ($unit: ident);
         $($opcode: literal => $var: ident $({ $($args: ident),* })?),* $(,)?
     ) => {
+        // unit variants version that models opcodes
         #[doc = concat!("\nmain block type is [`", stringify!{$name}, "`]")]
         #[allow(unused)]
         #[derive(Debug, PartialEq, Clone, Copy, Hash)]

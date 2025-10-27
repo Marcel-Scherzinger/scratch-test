@@ -33,6 +33,7 @@ super::define_blocks! {
         string2: Expression,
     },
     "operator_not" => OperatorNot {
+        /// reference to boolean expression that should be negated
         operand: RefBlock,
     },
 

@@ -1,3 +1,5 @@
+/// mostly replaced by block definition macro,
+/// now it's only used by own blocks
 macro_rules! getter {
     ($map: ident . $key: literal as $elemtype: ident) => {
         $crate::blocks::getter!($map: $map . $key as $elemtype, )

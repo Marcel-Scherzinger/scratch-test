@@ -16,7 +16,9 @@ pub enum BlockKind {
     },
     #[from(skip)]
     ProceduresPrototype {
+        /// representation of procedure's name with placeholders for arguments
         proccode: String,
+        /// a sequence of arguments this procedure accepts
         arguments: std::rc::Rc<[ProcedureArgumentDef]>,
     },
 
