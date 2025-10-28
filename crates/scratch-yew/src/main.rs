@@ -12,10 +12,12 @@ pub enum SupportedExercise {
     A1b,
     #[display("A2a")]
     A2a,
+    #[display("A3a")]
+    A3a,
 }
 
 impl SupportedExercise {
-    const ACTIVE: [Self; 3] = [Self::A1a, Self::A1b, Self::A2a];
+    const ACTIVE: [Self; 4] = [Self::A1a, Self::A1b, Self::A2a, Self::A3a];
 
     pub fn get_runner(&self) -> std::rc::Rc<dyn testdata::ExerciseTest> {
         use std::rc::Rc;
@@ -23,6 +25,7 @@ impl SupportedExercise {
             SupportedExercise::A1a => Rc::new(testdata::A1a),
             SupportedExercise::A1b => Rc::new(testdata::A1b),
             SupportedExercise::A2a => Rc::new(testdata::A2a),
+            SupportedExercise::A3a => Rc::new(testdata::A3a),
         }
     }
 }
@@ -34,6 +37,7 @@ impl std::str::FromStr for SupportedExercise {
             "1a" | "a1a" => Self::A1a,
             "1b" | "a1b" => Self::A1b,
             "2a" | "a2a" => Self::A2a,
+            "3a" | "a3a" => Self::A3a,
             _ => return Err(()),
         })
     }
