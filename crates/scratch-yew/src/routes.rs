@@ -1,4 +1,4 @@
-use crate::components::{ExercisePage, NotFoundPage};
+use crate::components::{ExercisePage, LandingPage, NotFoundPage};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
@@ -8,6 +8,9 @@ pub enum MainRoute {
     // Home,
     #[at("/exercise/:id")]
     Exercise { id: crate::SupportedExercise },
+
+    #[at("/")]
+    Welcome,
 
     #[not_found]
     #[at("/404")]
@@ -20,5 +23,6 @@ pub fn switch_main(route: MainRoute) -> Html {
             html!(<ExercisePage exercise={id}/>)
         }
         MainRoute::NotFound => html!(<NotFoundPage/>),
+        MainRoute::Welcome => html!(<LandingPage/>),
     }
 }

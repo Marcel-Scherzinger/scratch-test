@@ -15,6 +15,8 @@ pub enum SupportedExercise {
 }
 
 impl SupportedExercise {
+    const ACTIVE: [Self; 3] = [Self::A1a, Self::A1b, Self::A2a];
+
     pub fn get_runner(&self) -> std::rc::Rc<dyn testdata::ExerciseTest> {
         use std::rc::Rc;
         match self {

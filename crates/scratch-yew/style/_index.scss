@@ -118,3 +118,20 @@ body {
   margin-top: 0.2rem;
   margin-bottom: 0.2rem;
 }
+
+button {
+  background-color: blue;
+  color: white;
+}
+
+.supported-exercises-boxes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 0.5em;
+}
+.supported-exercises-button {
+  padding: 1rem;
+  border-radius: 1em;
+  font-size: 1.2em;
+}
+
