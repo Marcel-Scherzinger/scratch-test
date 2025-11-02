@@ -11,7 +11,9 @@ pub(crate) struct RandomNumbers {
     generated: Vec<model::SValue>,
     // number of requested elements so far
     next_pos: usize,
-    rng: rand::rngs::ThreadRng,
+    // Some if random generation is enabled, None otherwise
+    #[cfg(feature = "rand")]
+    rng: Option<rand::rngs::ThreadRng>,
 }
 impl PartialEq for RandomNumbers {
     fn eq(&self, other: &Self) -> bool {
@@ -28,12 +30,20 @@ impl RandomNumbers {
     pub fn new_with(provided_randoms: impl Into<Rc<[model::SValue]>>) -> Self {
         let provided = provided_randoms.into();
         Self {
-            rng: rand::rng(),
+            #[cfg(feature = "rand")]
+            rng: None,
             provided,
             generated: vec![],
             next_pos: 0,
         }
     }
+    #[cfg(feature = "rand")]
+    pub fn enable_random_generation(&mut self) {
+        if self.rng.is_none() {
+            self.rng = Some(rand::rng());
+        }
+    }
+
     pub fn new_from<T>(randoms: impl IntoIterator<Item = T>) -> Self
     where
         T: Into<model::SValue>,
@@ -52,14 +62,19 @@ impl RandomNumbers {
             self.next_pos += 1;
             Ok(got.clone())
         } else {
-            let random = generate_random(&mut self.rng, from, to);
-            self.generated.push(random.clone());
-            self.next_pos += 1;
-            Ok(random)
+            #[cfg(feature = "rand")]
+            if let Some(rng) = &mut self.rng {
+                let random = generate_random(rng, from, to);
+                self.generated.push(random.clone());
+                self.next_pos += 1;
+                return Ok(random);
+            }
+            Err(crate::RunError::GenerateRandomsDisabled)
         }
     }
 }
 
+#[cfg(feature = "rand")]
 fn generate_random<R: rand::Rng>(
     rng: &mut R,
     from: &model::SValue,

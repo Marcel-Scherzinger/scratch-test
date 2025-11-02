@@ -42,4 +42,8 @@ pub enum ProgramError {
     QuestionWithoutAnswer,
     #[display("program requested a random number range not matching the provided random number")]
     InvalidRandomRequest,
+    #[display(
+        "program tried to generate random numbers when no (more) pre-set randoms were provided while on-the-fly generation is disabled"
+    )]
+    GenerateRandomsDisabled,
 }

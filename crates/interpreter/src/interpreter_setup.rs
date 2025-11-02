@@ -31,9 +31,24 @@ pub struct PrepareInterpreter {
     answers: Rc<[model::SValue]>,
     randoms: Rc<[model::SValue]>,
     limits: Limits,
+    #[cfg(feature = "rand")]
+    random_gen_enabled: bool,
 }
 
 impl PrepareInterpreter {
+    #[cfg(feature = "rand")]
+    pub fn set_random_generation_enabled(mut self, enable: bool) -> Self {
+        self.random_gen_enabled = enable;
+        self
+    }
+    #[cfg(feature = "rand")]
+    pub fn enable_random_generation(mut self) -> Self {
+        self.set_random_generation_enabled(true)
+    }
+    #[cfg(feature = "rand")]
+    pub fn disable_random_generation(mut self) -> Self {
+        self.set_random_generation_enabled(false)
+    }
     pub fn with_answers_inner(mut self, answers: Rc<[model::SValue]>) -> Self {
         self.answers = answers;
         self
@@ -70,6 +85,8 @@ impl PrepareInterpreter {
                 self.answers,
                 self.limits,
                 self.randoms,
+                #[cfg(feature = "rand")]
+                self.random_gen_enabled,
             ),
             phantom: Default::default(),
         };
@@ -100,6 +117,8 @@ impl InterpreterBuilder {
             target_idx: self.target_idx,
             start_block_id: self.start_block_id.clone(),
             limits: Limits::new(),
+            #[cfg(feature = "rand")]
+            random_gen_enabled: false,
         }
     }
 }

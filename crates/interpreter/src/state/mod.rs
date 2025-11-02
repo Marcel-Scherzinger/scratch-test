@@ -65,9 +65,16 @@ impl State {
         answers: Rc<[model::SValue]>,
         limits: Limits,
         randoms: Rc<[model::SValue]>,
+        #[cfg(feature = "rand")] rng_enabled: bool,
     ) -> Self {
         let all_variables = AllVariables::new(&doc, target_idx);
         let all_lists = AllLists::new(&doc, target_idx);
+
+        let mut random_mng = RandomNumbers::new_with(randoms);
+        #[cfg(feature = "rand")]
+        if rng_enabled {
+            random_mng.enable_random_generation();
+        }
 
         State {
             doc,
@@ -82,7 +89,7 @@ impl State {
             warnings: Warnings {
                 used_counter_loop: false,
             },
-            requested_randoms: RandomNumbers::new(),
+            requested_randoms: random_mng,
             procedure_arguments_frames: vec![],
         }
     }

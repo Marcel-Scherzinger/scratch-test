@@ -85,6 +85,7 @@ impl TestCase {
             | E::ProvidedRandomOutOfRequestedFloatRange { .. } => {
                 ProgramError::InvalidRandomRequest
             }
+            E::GenerateRandomsDisabled => ProgramError::GenerateRandomsDisabled,
         })
     }
     pub fn get_required_list(&self, name: &str) -> Result<&[model::SValue], Message<TestReport>> {

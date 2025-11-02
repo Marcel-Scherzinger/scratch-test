@@ -52,5 +52,10 @@ pub enum RunError {
     ProvidedRandomOutOfRequestedIntRange { from: i64, to: i64, got: i64 },
     #[error("program requested float random range not matching provided random number")]
     ProvidedRandomOutOfRequestedFloatRange { from: f64, to: f64, got: f64 },
+
+    #[error(
+        "program tried to generate random numbers when no (more) pre-set randoms were provided, but on-the-fly-generation is disabled"
+    )]
+    GenerateRandomsDisabled,
 }
 pub type RResult<T> = Result<T, RunError>;
