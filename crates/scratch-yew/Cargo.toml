@@ -19,7 +19,7 @@ yew-router = "0.18.0"
 getrandom = { version = "0.3", features = ["wasm_js"] }
 
 model = { path = "../model" }
-interpreter = { path = "../interpreter" }
+interpreter = { path = "../interpreter", features = ["rand"] }
 testdata = { path = "../testdata" }
 testreports = { path = "../testreports" }
 derive_more = { version = "2.0.1", features = ["display"] }
