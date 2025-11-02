@@ -12,9 +12,11 @@ const EXPECTED_NOT_ONLY_CORRECT: Message<TestReport> = Message::chint(
 );
 
 /// `0 ≤ first < second`
-const DISTINCT_NON_NEGATIVE_PAIRS: [(i64, i64); 10] = [
+const DISTINCT_NON_NEGATIVE_PAIRS: [(i64, i64); 12] = [
     (2024, 2025),
     (100, 200),
+    (2, 11),
+    (10, 11),
     (0, 100),
     (39, 42),
     (20, 30),
@@ -25,10 +27,11 @@ const DISTINCT_NON_NEGATIVE_PAIRS: [(i64, i64); 10] = [
     (8, 10),
 ];
 /// `first < second ≤ 0`
-const DISTINCT_NON_POSITIVE_PAIRS: [(i64, i64); 12] = [
+const DISTINCT_NON_POSITIVE_PAIRS: [(i64, i64); 13] = [
     (-2025, -2024),
     (-2024, 0),
     (-200, -100),
+    (-110, -100),
     (-100, 0),
     (-42, -39),
     (-30, -20),
@@ -40,11 +43,12 @@ const DISTINCT_NON_POSITIVE_PAIRS: [(i64, i64); 12] = [
     (-10, 0),
 ];
 /// `first < 0 < second`
-const DISTINCT_DIFFERENT_SIGN_PAIRS: [(i64, i64); 12] = [
+const DISTINCT_DIFFERENT_SIGN_PAIRS: [(i64, i64); 13] = [
     (-2025, 2024),
     (-2024, 10),
     (-200, 100),
     (-100, 10),
+    (-100, 110),
     (-42, 39),
     (-30, 20),
     (-19, 17),
@@ -123,8 +127,10 @@ fn run_a_with(
 
             // try to guess format from `last_output`
 
-            let first_str = first.to_string();
-            let second_str = second.to_string();
+            // let first_str = first.to_string();
+            // let second_str = second.to_string();
+
+            let single_number = crate::utils::parse_single_i64_number(last_output);
 
             if last_output.contains("gleich")
                 || last_output.contains("identisch")
@@ -134,15 +140,15 @@ fn run_a_with(
                 if first == second {
                     return Ok(());
                 }
-            } else if last_output.contains("zweite")
-                || (last_output.contains(&second_str) && !last_output.contains(&first_str))
+            } else if last_output.contains("zweite") || single_number == Some(second)
+            // (last_output.contains(&second_str) && !last_output.contains(&first_str))
             {
                 // program says: first < second
                 if first < second {
                     return Ok(());
                 }
-            } else if last_output.contains("erste")
-                || (last_output.contains(&first_str) && !last_output.contains(&second_str))
+            } else if last_output.contains("erste") || single_number == Some(first)
+            // (last_output.contains(&first_str) && !last_output.contains(&second_str))
             {
                 // program says: second < first
                 if second < first {
