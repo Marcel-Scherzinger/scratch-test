@@ -52,10 +52,20 @@ pub fn failed_test_case(FailedTestCaseProps { case }: &FailedTestCaseProps) -> H
 
     let requested_randoms = case.out().requested_randoms();
     let requested_randoms = if requested_randoms.any_used() {
+        let first_used = requested_randoms
+            .iter_used()
+            .take(1)
+            .map(|v| html!(<span class={classes!("used-random-number")}>{v.to_string()}</span>));
+        let used = requested_randoms.iter_used().skip(1).map(
+            |v| html!(<span class={classes!("used-random-number")}>{", "}{v.to_string()}</span>),
+        );
+        let unused = requested_randoms.iter_unused().map(
+            |v| html!(<span class={classes!("unused-random-number")}>{", "}{v.to_string()}</span>),
+        );
         html!(
             <tr>
                 <td>{"requested randoms: "}</td>
-                <td>{format!("{requested_randoms:?}")}</td>
+                <td>{"["}{for first_used}{for used}{for unused}{"]"}</td>
             </tr>
         )
     } else {
