@@ -81,6 +81,10 @@ impl TestCase {
                 return None;
             }
             E::QuestionAskedWithoutAnswer => ProgramError::QuestionWithoutAnswer,
+            E::ProvidedRandomOutOfRequestedIntRange { .. }
+            | E::ProvidedRandomOutOfRequestedFloatRange { .. } => {
+                ProgramError::InvalidRandomRequest
+            }
         })
     }
     pub fn get_required_list(&self, name: &str) -> Result<&[model::SValue], Message<TestReport>> {

@@ -40,4 +40,6 @@ pub enum ProgramError {
     ExecutedTooManyBlocks,
     #[display("program asked too many questions")]
     QuestionWithoutAnswer,
+    #[display("program requested a random number range not matching the provided random number")]
+    InvalidRandomRequest,
 }

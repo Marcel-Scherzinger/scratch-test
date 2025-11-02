@@ -29,6 +29,7 @@ pub struct PrepareInterpreter {
     target_idx: usize,
     start_block_id: Id,
     answers: Rc<[model::SValue]>,
+    randoms: Rc<[model::SValue]>,
     limits: Limits,
 }
 
@@ -44,6 +45,17 @@ impl PrepareInterpreter {
         self.answers = answers.into_iter().map(|t| t.into()).collect();
         self
     }
+    pub fn with_randoms_inner(mut self, randoms: Rc<[model::SValue]>) -> Self {
+        self.randoms = randoms;
+        self
+    }
+    pub fn with_randoms<T: Into<model::SValue>>(
+        mut self,
+        randoms: impl IntoIterator<Item = T>,
+    ) -> Self {
+        self.randoms = randoms.into_iter().map(|t| t.into()).collect();
+        self
+    }
     pub fn with_block_limit(mut self, max_stmts: usize) -> Self {
         self.limits.max_stmts = max_stmts;
         self
@@ -57,6 +69,7 @@ impl PrepareInterpreter {
                 self.start_block_id.clone(),
                 self.answers,
                 self.limits,
+                self.randoms,
             ),
             phantom: Default::default(),
         };
@@ -82,6 +95,7 @@ impl InterpreterBuilder {
     pub fn prepare(&self) -> PrepareInterpreter {
         PrepareInterpreter {
             answers: Rc::from([]),
+            randoms: Rc::from([]),
             doc: self.doc.clone(),
             target_idx: self.target_idx,
             start_block_id: self.start_block_id.clone(),

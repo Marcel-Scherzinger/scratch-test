@@ -1,6 +1,6 @@
 use model::Id;
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq, Clone)]
+#[derive(Debug, thiserror::Error, PartialEq, Clone)]
 pub enum RunError {
     #[error("code tried to access variable that wasn't defined: {0:?}")]
     AccessUnknownVariable(Id),
@@ -47,5 +47,10 @@ pub enum RunError {
 
     #[error("arguments in procedure call don't match procedure prototype")]
     InvalidProcedureCallArguments,
+
+    #[error("program requested integer random range not matching provided random number")]
+    ProvidedRandomOutOfRequestedIntRange { from: i64, to: i64, got: i64 },
+    #[error("program requested float random range not matching provided random number")]
+    ProvidedRandomOutOfRequestedFloatRange { from: f64, to: f64, got: f64 },
 }
 pub type RResult<T> = Result<T, RunError>;

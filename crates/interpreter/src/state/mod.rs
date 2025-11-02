@@ -64,6 +64,7 @@ impl State {
         green_flag_id: Id,
         answers: Rc<[model::SValue]>,
         limits: Limits,
+        randoms: Rc<[model::SValue]>,
     ) -> Self {
         let all_variables = AllVariables::new(&doc, target_idx);
         let all_lists = AllLists::new(&doc, target_idx);
@@ -131,8 +132,8 @@ impl State {
         &mut self,
         from: &model::SValue,
         to: &model::SValue,
-    ) -> model::SValue {
-        self.requested_randoms.request(from, to)
+    ) -> RResult<model::SValue> {
+        self.requested_randoms.request_strict(from, to)
     }
     pub fn set_variable(&mut self, variable: &Variable, value: model::SValue) -> RResult<()> {
         let mut v = self.all_variables.get_mut(variable)?;
