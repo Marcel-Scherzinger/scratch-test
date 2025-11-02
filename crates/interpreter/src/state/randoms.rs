@@ -132,15 +132,18 @@ impl RandomNumbersReport {
         }
     }
     pub fn iter_used(&self) -> impl Iterator<Item = &model::SValue> {
-        self.provided
-            .iter()
-            .chain(self.generated.iter())
-            .take(self.used_count())
+        self.iter_used_and_unused().take(self.used_count())
+    }
+    pub fn iter_unused(&self) -> impl Iterator<Item = &model::SValue> {
+        self.iter_used_and_unused().skip(self.used_count())
     }
     pub fn used_count(&self) -> usize {
         self.next_pos
     }
     pub fn any_used(&self) -> bool {
         self.used_count() > 0
+    }
+    pub fn iter_used_and_unused(&self) -> impl Iterator<Item = &model::SValue> {
+        self.provided.iter().chain(self.generated.iter())
     }
 }
