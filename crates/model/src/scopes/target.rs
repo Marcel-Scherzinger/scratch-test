@@ -3,6 +3,9 @@ use crate::ext::{FromJsonExt, WithJsonContextExt};
 use crate::{Error, TargetBlocks, TargetLists, TargetProcedures, TargetVariables};
 
 /// A target is a sprite or the background
+///
+/// This models a [file format's target object](https://en.scratch-wiki.info/wiki/Scratch_File_Format#Targets)
+/// while focussing on the relevant parts for this application.
 #[derive(Debug, derive_getters::Getters, PartialEq)]
 pub struct Target {
     is_stage: bool,
