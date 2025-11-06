@@ -1,3 +1,42 @@
+//! # Scratch Interpreter
+//!
+//! This project provides a way to run algorithmic programs written using the
+//! block-oriented programming language [Scratch](https://scratch.mit.edu/).
+//!
+//! The behaviour and output state of such programs can then be analysed
+//! and unit-tested to report general implementation errors or give sometimes
+//! even specific advice (this is up to the test definition code) on how to
+//! fix errors.
+//!
+//! Everything is written in Rust and also the test definitions need to be in Rust.
+//!
+//! # Parts
+//!
+//! This projects is split into multiple crates to organise it's components:
+//!
+//! - [`model`] This is the bridge to the Scratch sb3 file format and parses it into
+//!   an easy-to-use structure for further usage. Here, all blocks are defined and
+//!   grouped by their function and kind. Some unsupported blocks are also classified
+//!   as this property to be able to report this better.
+//! - [`interpreter`] This is a virtual machine that uses the structure from [`model`]
+//!   to run the program within set limits and constraints providing it with specified
+//!   inputs like pre-generated random numbers or "answers" to questions which is a
+//!   Scratch concept comparable to asking the user on stdin.
+//! - [`testreports`] Here a general framework for reporting found errors and wrong
+//!   behaviour is defined. You can define exercises that group tests in categories.
+//!   Each entity (whole report or exercise/category/single test) is able to send
+//!   arbitrary text as "messages" in different severity levels. Those messages will
+//!   be shown to users depending on the pass/fail status of individual tests and
+//!   categories. The usage of this framework is not required.
+//!   [`model`] and [`interpreter`] can be used completly independently!
+//! - [`testdata`] Here the default exercises are defined by using the framework from
+//!   [`testreports`]
+//! - [`scratch-yew`](../scratch_yew/index.html)
+//!   This is a frontend-only application that compiles to WebAssembly (WASM)
+//!   and is intended as an option for participants to test their solution
+//!   before submitting it. It uses the data from [`testdata`] by the spec of [`testreports`]
+//!   to visually group tests and especially failures by input types.
+
 mod cli;
 mod visual;
 
@@ -96,7 +135,7 @@ fn run_single(file: PathBuf, exercise_number: u8, exercise_part: ExercisePart) {
     let tester: std::rc::Rc<dyn ExerciseTest> = match (exercise_number, exercise_part) {
         (1, ExercisePart::A) => std::rc::Rc::new(testdata::A1a),
         (1, ExercisePart::B) => std::rc::Rc::new(testdata::A1b),
-        (2, ExercisePart::A) => std::rc::Rc::new(testdata::A2a),
+        // (2, ExercisePart::A) => std::rc::Rc::new(testdata::A2a),
         _ => todo!(),
     };
 

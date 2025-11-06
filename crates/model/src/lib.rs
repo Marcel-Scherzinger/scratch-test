@@ -1,3 +1,12 @@
+//! Model to parse the [file format](https://en.scratch-wiki.info/wiki/Scratch_File_Format)
+//! of the [Scratch](https://scratch.mit.edu/) block-oriented programming language
+//!
+//! (I want to note that I was unable to find the above link to the format specification
+//! when I was developing this so I reverse-engineered the format from example files.
+//! Luckily, it looks like I correctly understood the meaning of the components.)
+//!
+//!
+
 /// copied from [<https://github.com/scratchfoundation/scratch-vm/blob/develop/src/serialization/sb3.js>]
 pub mod constants;
 
