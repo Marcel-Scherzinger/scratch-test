@@ -127,7 +127,7 @@ button {
 .supported-exercises-boxes {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  column-gap: 0.5em;
+  gap: 0.5em;
 }
 .supported-exercises-button {
   padding: 1rem;
