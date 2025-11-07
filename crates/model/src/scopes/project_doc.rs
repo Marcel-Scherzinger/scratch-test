@@ -8,12 +8,23 @@ use crate::{
 };
 use std::rc::Rc;
 
+/// Represents an entire sb3 program file with all [`Target`]s,
+/// blocks ([`TargetBlocks`](crate::TargetBlocks)) and
+/// procedures ([`TargetProcedures`](crate::TargetProcedures))
+///
+/// See the [`crate`] level docs for a general explaination
 #[derive(Debug, derive_getters::Getters, Clone, PartialEq)]
 pub struct ProjectDoc {
+    /// Targets of the document, see [`Target`] for details
     pub(crate) targets: Rc<[Target]>,
+    /// The version number stored as metadata in the document
+    ///
+    /// This field is currently unused by the implementation
+    /// but may be used in the future to detect compatible files
     pub(crate) semver: Option<Rc<str>>,
 }
 impl ProjectDoc {
+    /// Iterator of all _invalid_ blocks regardless of the [target](`Target`)
     pub fn invalid_blocks(&self) -> impl Iterator<Item = (&Id, &Rc<JsonCtxError<BlockKindError>>)> {
         self.targets.iter().flat_map(|t| t.blocks().iter_invalid())
     }

@@ -14,15 +14,28 @@ pub struct TargetBlocks {
 }
 
 impl TargetBlocks {
+    /// All **valid** blocks (no unsupported or unknown blocks included)
     pub fn iter_blocks(&self) -> impl Iterator<Item = &Rc<BlockWrapper>> {
         self.valid.values()
     }
+    /// Get block by [`Id`]
     pub fn get(&self, id: &Id) -> Option<&Rc<BlockWrapper>> {
         self.valid.get(id)
     }
+    /// Iterator of all invalid blocks
+    ///
+    /// Those are:
+    ///
+    /// - Blocks that are known to be unsupported ([`UnsupportedBlockKind`])
+    ///   by this application
+    /// - Blocks with an unknown
+    ///   [opcode name](https://en.scratch-wiki.info/wiki/List_of_Block_Opcodes)
     pub fn iter_invalid(&self) -> impl Iterator<Item = (&Id, &Rc<JsonCtxError<BlockKindError>>)> {
         self.invalid.iter()
     }
+    /// Iterator of [`Id`]s and
+    /// [opcode names](https://en.scratch-wiki.info/wiki/List_of_Block_Opcodes)
+    /// of invalid blocks that are unknown by the application
     pub fn iter_unknown_blocks(&self) -> impl Iterator<Item = (&Id, &Rc<str>)> {
         self.iter_invalid().filter_map(|(id, e)| {
             if let BlockKindError::UnknownBlock(n) = e.error() {
@@ -32,6 +45,9 @@ impl TargetBlocks {
             }
         })
     }
+
+    /// Iterator of [`Id`]s and [`UnsupportedBlockKind`] of invalid blocks
+    /// that are known to be unsupported by this application
     pub fn iter_unsupported_blocks(&self) -> impl Iterator<Item = (&Id, &UnsupportedBlockKind)> {
         self.iter_invalid().filter_map(|(id, e)| {
             if let BlockKindError::UnsupportedBlock(n) = e.error() {
@@ -41,6 +57,8 @@ impl TargetBlocks {
             }
         })
     }
+    /// Iterator of [`Id`]s and [opcode names](https://en.scratch-wiki.info/wiki/List_of_Block_Opcodes)
+    /// of valid and invalid blocks
     pub fn ids_with_blocks(&self) -> impl Iterator<Item = (Id, Rc<str>)> {
         use crate::blocks::GetOpcodeUnit;
         self.valid
@@ -79,11 +97,30 @@ impl crate::ext::FromJsonExt<Self, TargetBlocksError> for TargetBlocks {
     }
 }
 
+/// This wraps a Scratch [block](https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks)
+///
+/// It stores the unique [`Id`] of the block Scratch has assigned to it,
+/// the [`Id`] of the `next` block (especially important for statements)
+/// and the `parent` block (`parent` is not actively used in the application).
+///
+/// **parent** is not the defined to be the previous block
+/// (next and parent don't form a double-linked-list)
+/// but it can be the next-outer-block in the hierarchy.
+/// [See here for details](https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks)
 #[derive(Debug, derive_getters::Getters, PartialEq)]
 pub struct BlockWrapper {
+    /// The unique id of this block, alphanumeric and special characters are used
     id: Id,
+    /// The [`BlockKind`] contains specific information for this kind of block
     inner: BlockKind,
+    /// An optional id to the next block following this
     next: Option<Id>,
+    /// `parent` is not actively used in the application
+    ///
+    /// **parent** is not the defined to be the previous block
+    /// (next and parent don't form a double-linked-list)
+    /// but it can be the next-outer-block in the hierarchy.
+    /// [See here for details](https://en.scratch-wiki.info/wiki/Scratch_File_Format#Blocks)
     parent: Option<Id>,
 }
 impl BlockWrapper {
