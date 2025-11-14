@@ -43,7 +43,7 @@ jobs:
       # - name: Run tests
       #   run: cargo test --verbose
     - name: Build
-      run: cd crates/scratch-yew && trunk build --public-url "./" --release --features scratch-test-scope
+      run: cd crates/scratch-yew && trunk build --public-url "./" --release
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
