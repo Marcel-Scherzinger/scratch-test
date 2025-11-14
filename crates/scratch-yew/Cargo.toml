@@ -24,3 +24,6 @@ testdata = { path = "../testdata" }
 testreports = { path = "../testreports" }
 derive_more = { version = "2.0.1", features = ["display"] }
 
+[features]
+scratch-test-scope = []
+
