@@ -19,7 +19,7 @@ const MULTIPLE_OUTPUTS: Message<Category> =
     Message::cwarning("Your program outputs more than one answer. Only the last will be used");
 
 const AMBIGUOUS_ANSWER: Message<Category> = Message::cwarning(
-    "Didn't find marker word 'korrekt'/'richtig'/'gültig' (→ valid) or 'nicht'/'falsch'/'inkorrekt' (→ invalid). ('nicht korrect' would be interpreted as invalid)",
+    "Didn't find marker word 'korrekt'/'richtig'/'gültig' (→ valid) or 'nicht'/'falsch'/'inkorrekt' (→ invalid). ('nicht korrekt' would be interpreted as invalid)",
 );
 const EXPECTED_NOT_ONLY_CORRECT: Message<TestReport> = Message::chint(
     "The 'expected answer' is not the only allowed format for output. You can use it (or a string containing the correct marker word)",
@@ -106,18 +106,25 @@ fn run_with(interp: &interpreter::InterpreterBuilder, tests: &mut CategoryTests,
 
         // try to guess format from `last_output`
 
-        if last_output.contains("inkorrekt")
-            || last_output.contains("nicht")
-            || last_output.contains("falsch")
-            || last_output.contains("ungültig")
+        let lowercase_last = last_output.to_lowercase();
+        if lowercase_last.contains("inkorrekt")
+            || lowercase_last.contains("nicht")
+            || lowercase_last.contains("falsch")
+            || lowercase_last.contains("ungültig")
+            || lowercase_last.contains("keine")
+            || lowercase_last.contains("fehlerhaft")
         {
             // program says: invalid
             if validated_isbn.is_err() {
                 return Ok(());
             }
-        } else if last_output.contains("korrekt")
-            || last_output.contains("richtig")
-            || last_output.contains("gültig")
+        } else if lowercase_last.contains("korrekt")
+            // spelling mistake on purpose
+            || lowercase_last.contains("korrket")
+            || lowercase_last.contains("fehlerfrei")
+            || lowercase_last.contains("richtig")
+            || lowercase_last.contains("gültig")
+            || lowercase_last.contains("das ist eine isbn")
         {
             // program says: valid
             if validated_isbn.is_ok() {
