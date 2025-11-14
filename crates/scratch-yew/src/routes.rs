@@ -2,7 +2,7 @@ use crate::components::{ExercisePage, LandingPage, NotFoundPage};
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-#[cfg(not(feature = "scratch-test-scope"))]
+#[cfg(feature = "scratch-test-unscope")]
 #[derive(Clone, Routable, PartialEq)]
 pub enum MainRoute {
     // #[at("/")]
@@ -17,7 +17,7 @@ pub enum MainRoute {
     #[at("/404")]
     NotFound,
 }
-#[cfg(feature = "scratch-test-scope")]
+#[cfg(not(feature = "scratch-test-unscope"))]
 #[derive(Clone, Routable, PartialEq)]
 pub enum MainRoute {
     // #[at("/")]
