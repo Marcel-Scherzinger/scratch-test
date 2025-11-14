@@ -144,7 +144,7 @@ impl State {
     }
     pub fn set_variable(&mut self, variable: &Variable, value: model::SValue) -> RResult<()> {
         let mut v = self.all_variables.get_mut(variable)?;
-        log::debug!("set variable {} to {value:?}", variable.name());
+        log::trace!("set variable {} to {value:?}", variable.name());
         *v = value;
         Ok(())
     }

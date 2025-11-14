@@ -22,10 +22,11 @@ impl Interpreter<Starting> {
         let kind = block.inner();
         let next = block.next().clone();
 
-        log::debug!("execute: {kind:?}");
+        log::trace!("execute: {kind:?}");
 
         use BlockKind as K;
         use model::StmtBlockKind as S;
+        let scope = kind.get_opcode();
         match &kind {
             K::ProceduresDefinition { custom_block } => {
                 self.state.stack_push_opt(next)?;
@@ -38,10 +39,16 @@ impl Interpreter<Starting> {
                 EventBlockKind::EventWhenflagclicked | EventBlockKind::EventWhenkeypressed { .. },
             ) => {
                 self.state.stack_push_opt(next)?;
+                log::debug!("[{scope}] reacted with event block");
             }
-            K::Noop(_) | K::Unsup(_) => {
+            K::Noop(_) => {
+                self.state.stack_push_opt(next)?;
+                log::debug!("[{scope}] reached no-operation block, doing nothing");
+            }
+            K::Unsup(_) => {
                 // TODO: warn or fail on unsupported
                 self.state.stack_push_opt(next)?;
+                log::debug!("[{scope}] reached unsupported operation, treated like no-operation");
             }
             K::Stmt(stmt) => match &stmt {
                 S::ProceduresCall {
@@ -79,6 +86,7 @@ impl Interpreter<Starting> {
                                 .stack_push(StackItem::PopArgumentFrame(block.id().clone()))?;
                             self.state.procedure_arguments_push_frame(frame)?;
                             self.state.stack_push(definition_block_id)?;
+                            log::debug!("[{scope}] call procedure: {proccode:?}");
                         }
                         // call will be cleaned up (it is now after the exit of the call)
                         StackItem::PopArgumentFrame(_) => {
@@ -91,12 +99,14 @@ impl Interpreter<Starting> {
 
                 S::LooksSay { message } => {
                     let message = self.evaluate_expr(message)?;
+                    log::debug!("[{scope}] say message {message:?}");
                     self.state
                         .action_write_output(crate::OutputAction::Say, message.as_text().into())?;
                     self.state.stack_push_opt(next)?;
                 }
                 S::LooksThink { message } => {
                     let message = self.evaluate_expr(message)?;
+                    log::debug!("[{scope}] think message {message:?}");
                     self.state.action_write_output(
                         crate::OutputAction::Think,
                         message.as_text().into(),
@@ -106,6 +116,7 @@ impl Interpreter<Starting> {
                 S::LooksThinkforsecs { message, secs } => {
                     let message = self.evaluate_expr(message)?;
                     let secs = self.evaluate_expr(secs)?;
+                    log::debug!("[{scope}] think message {message:?} for {secs:?}s");
                     self.state.action_write_output(
                         crate::OutputAction::ThinkFor(secs.as_float()),
                         message.as_text().into(),
@@ -115,6 +126,7 @@ impl Interpreter<Starting> {
                 S::LooksSayforsecs { message, secs } => {
                     let message = self.evaluate_expr(message)?;
                     let secs = self.evaluate_expr(secs)?;
+                    log::debug!("[{scope}] say message {message:?} for {secs:?}s");
                     self.state.action_write_output(
                         crate::OutputAction::SayFor(secs.as_float()),
                         message.as_text().into(),
@@ -128,17 +140,20 @@ impl Interpreter<Starting> {
                     let stop_loop = self.evaluate_opt_cmp(condition)?;
                     if !stop_loop {
                         if let Some(substack) = substack {
+                            log::debug!("[{scope}] condition was false, run loop iteration");
                             self.state.stack_push(stack_item)?;
                             self.state.stack_push(substack.o_id())?;
                         } else {
                             Err(crate::RunError::ConditionLoopWithoutBodyNeverStops)?;
                         }
                     } else {
+                        log::debug!("[{scope}] condition was true, terminate loop");
                         self.state.stack_push_opt(next)?;
                     }
                 }
                 S::DataSetvariableto { variable, value } => {
                     let value = self.evaluate_expr(value)?;
+                    log::debug!("[{scope}] set variable {:?} to {value:?}", variable.name());
                     self.state.set_variable(variable, value)?;
                     self.state.stack_push_opt(next)?;
                 }
@@ -152,12 +167,16 @@ impl Interpreter<Starting> {
                         |old, value| old + value,
                         |old, value| old + value,
                     );
-
+                    log::debug!(
+                        "[{scope}] change variable {:?} from {old:?} by {value:?}, new value is {new:?}",
+                        variable.name()
+                    );
                     self.state.set_variable(variable, new)?;
                     self.state.stack_push_opt(next)?;
                 }
                 S::ControlWait { duration } => {
                     let duration = self.evaluate_expr(duration)?;
+                    log::debug!("[{scope}] wait {duration:?}s");
                     self.state.action_wait(duration.as_float());
                     self.state.stack_push_opt(next)?;
                 }
@@ -168,12 +187,12 @@ impl Interpreter<Starting> {
                     let condition = self.evaluate_opt_cmp(condition)?;
                     self.state.stack_push_opt(next)?;
                     if condition {
-                        log::debug!("if: condition true");
+                        log::debug!("[{scope}] condition was true, executing then-part");
                         // push body if not empty
                         self.state
                             .stack_push_opt(substack.as_ref().map(|b| b.o_id()))?;
                     } else {
-                        log::debug!("if: condition false");
+                        log::debug!("[{scope}] condition was false, skipping then-part");
                     }
                 }
                 S::ControlIfElse {
@@ -184,15 +203,18 @@ impl Interpreter<Starting> {
                     let condition = self.evaluate_opt_cmp(condition)?;
                     self.state.stack_push_opt(next)?;
                     if condition {
+                        log::debug!("[{scope}] condition was true, executing then-part");
                         self.state
                             .stack_push_opt(substack.as_ref().map(|d| d.o_id()))?;
                     } else {
+                        log::debug!("[{scope}] condition was false, executing else-part");
                         self.state
                             .stack_push_opt(substack2.as_ref().map(|d| d.o_id()))?;
                     }
                 }
                 S::ControlForever { substack } => {
                     if let Some(substack) = substack {
+                        log::debug!("[{scope}] iteration of forever-loop");
                         self.state.stack_push(stack_item)?;
                         self.state.stack_push(substack.deref().clone())?;
                     } else {
@@ -211,6 +233,7 @@ impl Interpreter<Starting> {
                 S::ControlWaitUntil { condition } => {
                     let condition = self.evaluate_opt_cmp(condition)?;
                     if condition {
+                        log::debug!("[{scope}] waited till condition");
                         self.state.stack_push_opt(next)?;
                         return Ok(());
                     } else {
@@ -229,8 +252,14 @@ impl Interpreter<Starting> {
                     };
 
                     match remaining {
-                        0 => self.state.stack_push_opt(next)?,
+                        0 => {
+                            log::debug!("[{scope}] finished last iteration of loop");
+                            self.state.stack_push_opt(next)?
+                        }
                         1.. => {
+                            log::debug!(
+                                "[{scope}] start next of remaining {remaining:?} iteration(s) of loop",
+                            );
                             self.state.stack_push(StackItem::CountLoop(
                                 block.id().clone(),
                                 remaining - 1,
@@ -242,6 +271,7 @@ impl Interpreter<Starting> {
                 }
                 S::DataDeleteoflist { list, index } => {
                     let index = self.evaluate_expr(index)?.as_int();
+                    log::debug!("[{scope}] delete item {index:?} of list {:?}", list.name());
                     let mut list = self.state.get_mut_list_elements(list)?;
                     if index > 0 {
                         let index = index as usize;
@@ -252,6 +282,7 @@ impl Interpreter<Starting> {
                     self.state.stack_push_opt(next)?
                 }
                 S::DataDeletealloflist { list } => {
+                    log::debug!("[{scope}] delete every item of list {:?}", list.name());
                     let mut list = self.state.get_mut_list_elements(list)?;
                     list.clear();
                     self.state.stack_push_opt(next)?
@@ -259,6 +290,10 @@ impl Interpreter<Starting> {
                 S::DataInsertatlist { list, index, item } => {
                     let index = self.evaluate_expr(index)?.as_int();
                     let item = self.evaluate_expr(item)?;
+                    log::debug!(
+                        "[{scope}] insert item {item:?} at {index:?} into list {:?}",
+                        list.name()
+                    );
                     let mut list = self.state.get_mut_list_elements(list)?;
 
                     if index > 0 {
@@ -273,13 +308,22 @@ impl Interpreter<Starting> {
                 }
                 S::SensingAskandwait { question } => {
                     let question = self.evaluate_expr(question)?;
+                    log::debug!("[{scope}] ask question {question:?} and wait for answer");
                     self.state
                         .action_ask_question_and_wait(question.as_text().to_string())?;
+                    log::debug!(
+                        "[{scope}] question {question:?} answered with {:?}",
+                        self.state.read_last_answer()
+                    );
                     self.state.stack_push_opt(next)?;
                 }
                 S::DataReplaceitemoflist { list, index, item } => {
                     let index = self.evaluate_expr(index)?.as_int();
                     let item = self.evaluate_expr(item)?;
+                    log::debug!(
+                        "[{scope}] replace item {index:?} of {} with {item:?}",
+                        list.name()
+                    );
                     let mut list = self.state.get_mut_list_elements(list)?;
 
                     if index > 0 {
@@ -292,6 +336,7 @@ impl Interpreter<Starting> {
                 }
                 S::DataAddtolist { list, item } => {
                     let item = self.evaluate_expr(item)?;
+                    log::debug!("[{scope}] append item {item:?} to list {:?}", list.name());
                     let mut list = self.state.get_mut_list_elements(list)?;
 
                     list.push(item);
@@ -330,7 +375,7 @@ impl Interpreter<Starting> {
                             let from = self.evaluate_expr(from)?;
                             let to = self.evaluate_expr(to)?;
                             let res = self.state.request_random_number(&from, &to)?;
-                            log::debug!("[{scope}] random from {from:?} to {to:?} --> {res}");
+                            log::debug!("[{scope}] random from {from:?} to {to:?} --> {res:?}");
                             res
                         }
                         E::OperatorAdd { num1, num2 } => {
@@ -338,7 +383,7 @@ impl Interpreter<Starting> {
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Add;
                             let res = num1.same_numbers_wrap_op(&num2, Add::add, Add::add);
-                            log::debug!("[{scope}] {num1:?} + {num2:?} --> {res}");
+                            log::debug!("[{scope}] {num1:?} + {num2:?} --> {res:?}");
                             res
                         }
                         E::OperatorSubtract { num1, num2 } => {
@@ -346,7 +391,7 @@ impl Interpreter<Starting> {
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Sub;
                             let res = num1.same_numbers_wrap_op(&num2, Sub::sub, Sub::sub);
-                            log::debug!("[{scope}] {num1:?} - {num2:?} --> {res}");
+                            log::debug!("[{scope}] {num1:?} - {num2:?} --> {res:?}");
                             res
                         }
                         E::OperatorMultiply { num1, num2 } => {
@@ -354,7 +399,7 @@ impl Interpreter<Starting> {
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Mul;
                             let res = num1.same_numbers_wrap_op(&num2, Mul::mul, Mul::mul);
-                            log::debug!("[{scope}] {num1:?} * {num2:?} --> {res}");
+                            log::debug!("[{scope}] {num1:?} * {num2:?} --> {res:?}");
                             res
                         }
                         E::OperatorMod { num1, num2 } => {
@@ -369,7 +414,7 @@ impl Interpreter<Starting> {
                             } else {
                                 V::Int(num1 % num2)
                             };
-                            log::debug!("[{scope}] {num1:?} mod {num2:?} --> {res}");
+                            log::debug!("[{scope}] {num1:?} mod {num2:?} --> {res:?}");
                             res
                         }
                         E::OperatorDivide { num1, num2 } => {
@@ -385,7 +430,7 @@ impl Interpreter<Starting> {
                             } else {
                                 V::Float(num1 / num2)
                             };
-                            log::debug!("[{scope}] {num1:?} / {num2:?} --> {res}");
+                            log::debug!("[{scope}] {num1:?} / {num2:?} --> {res:?}");
                             res
                         }
                         E::OperatorLetterOf { letter, string } => {
@@ -404,7 +449,9 @@ impl Interpreter<Starting> {
                                         .into(),
                                 )
                             };
-                            log::debug!("[{scope}] letter {letter:?} of text {string:?} --> {res}");
+                            log::debug!(
+                                "[{scope}] letter {letter:?} of text {string:?} --> {res:?}"
+                            );
                             res
                         }
                         E::OperatorRound { num } => {
@@ -460,7 +507,7 @@ impl Interpreter<Starting> {
                                 model::SValue::Text("".into())
                             };
 
-                            log::debug!("[{scope}] element {index} of list {name} --> {res:?}");
+                            log::debug!("[{scope}] element {index:?} of list {name:?} --> {res:?}");
                             res
                         }
                         E::SensingAnswer => {
@@ -505,7 +552,7 @@ impl Interpreter<Starting> {
                                     return Err(RunError::UnsupportedMathOperator(other.into()));
                                 }
                             });
-                            log::debug!("[{scope}] ({operator_name} {num}) --> {res:?}");
+                            log::debug!("[{scope}] ({operator_name} {num:?}) --> {res:?}");
                             res
                         }
 
@@ -545,55 +592,55 @@ impl Interpreter<Starting> {
                         .procedure_arguments_nearest_boolean(value)?
                         .as_bool();
 
-                    log::debug!("[{scope}] {value:?} --> {res}");
+                    log::debug!("[{scope}] {value:?} --> {res:?}");
                     res
                 }
                 C::OperatorOr { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.deref().clone())?;
                     let operand2 = self.evaluate_cmp(operand2.deref().clone())?;
                     let res = operand1 || operand2;
-                    log::debug!("[{scope}] {operand1} || {operand2} --> {res}");
+                    log::debug!("[{scope}] {operand1} || {operand2} --> {res:?}");
                     res
                 }
                 C::OperatorAnd { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.o_id())?;
                     let operand2 = self.evaluate_cmp(operand2.o_id())?;
                     let res = operand1 && operand2;
-                    log::debug!("[{scope}] {operand1} && {operand2} --> {res}");
+                    log::debug!("[{scope}] {operand1} && {operand2} --> {res:?}");
                     res
                 }
                 C::OperatorNot { operand } => {
                     let op = self.evaluate_cmp(operand.o_id())?;
                     let res = !op;
-                    log::debug!("[{scope}] !{op} --> {res}");
+                    log::debug!("[{scope}] !{op} --> {res:?}");
                     res
                 }
                 C::OperatorEquals { operand1, operand2 } => {
                     let op1 = self.evaluate_expr(operand1)?;
                     let op2 = self.evaluate_expr(operand2)?;
                     let res = op1.scratch_eq(&op2);
-                    log::debug!("[{scope}] {op1} =? {op2} --> {res}");
+                    log::debug!("[{scope}] {op1} =? {op2} --> {res:?}");
                     res
                 }
                 C::OperatorGt { operand1, operand2 } => {
                     let op1 = self.evaluate_expr(operand1)?.as_float();
                     let op2 = self.evaluate_expr(operand2)?.as_float();
                     let res = op1 > op2;
-                    log::debug!("[{scope}] {op1} > {op2} --> {res}");
+                    log::debug!("[{scope}] {op1} > {op2} --> {res:?}");
                     res
                 }
                 C::OperatorLt { operand1, operand2 } => {
                     let op1 = self.evaluate_expr(operand1)?.as_float();
                     let op2 = self.evaluate_expr(operand2)?.as_float();
                     let res = op1 < op2;
-                    log::debug!("[{scope}] {op1} < {op2} --> {res}");
+                    log::debug!("[{scope}] {op1} < {op2} --> {res:?}");
                     res
                 }
                 C::OperatorContains { string1, string2 } => {
                     let string1 = self.evaluate_expr(string1)?;
                     let string2 = self.evaluate_expr(string2)?;
                     let res = string1.as_text().contains(string2.as_text().as_ref());
-                    log::debug!("[{scope}] is {string2:?} contained in {string1:?} --> {res}");
+                    log::debug!("[{scope}] is {string2:?} contained in {string1:?} --> {res:?}");
                     res
                 }
                 C::DataListcontainsitem { list, item } => {
@@ -601,7 +648,7 @@ impl Interpreter<Starting> {
                     let name = list.name();
                     let list = self.state.get_list_elements(list)?;
                     let res = list.iter().any(|i| i.scratch_eq(&item));
-                    log::debug!("[{scope}] is {item:?} contained in list {name:?} --> {res}");
+                    log::debug!("[{scope}] is {item:?} contained in list {name:?} --> {res:?}");
                     res
                 }
             })
