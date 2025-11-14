@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use itertools::Itertools;
-use model::{BlockKind, EventBlockKind, Id, ScratchExpr, attr::RefBlock};
+use model::{BlockKind, EventBlockKind, GetOpcodeUnit, Id, ScratchExpr, attr::RefBlock};
 
 use crate::{
     Interpreter, ProcedureArgumentsFrame, ProcedureId, RResult, RunError, StackItem, Starting,
@@ -167,9 +167,14 @@ impl Interpreter<Starting> {
                 } => {
                     let condition = self.evaluate_opt_cmp(condition)?;
                     self.state.stack_push_opt(next)?;
-                    // push body if not empty
-                    self.state
-                        .stack_push_opt(substack.as_ref().map(|b| b.o_id()))?;
+                    if condition {
+                        log::debug!("if: condition true");
+                        // push body if not empty
+                        self.state
+                            .stack_push_opt(substack.as_ref().map(|b| b.o_id()))?;
+                    } else {
+                        log::debug!("if: condition false");
+                    }
                 }
                 S::ControlIfElse {
                     condition,
@@ -318,49 +323,60 @@ impl Interpreter<Starting> {
                 if let B::Cmp(_) = b.inner() {
                     self.evaluate_cmp(b.id().clone()).map(model::SValue::Bool)
                 } else if let B::Expr(e) = b.inner() {
+                    let scope = e.get_opcode();
                     // normal expression
                     Ok(match e {
                         E::OperatorRandom { from, to } => {
                             let from = self.evaluate_expr(from)?;
                             let to = self.evaluate_expr(to)?;
-                            self.state.request_random_number(&from, &to)?
+                            let res = self.state.request_random_number(&from, &to)?;
+                            log::debug!("[{scope}] random from {from:?} to {to:?} --> {res}");
+                            res
                         }
                         E::OperatorAdd { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?;
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Add;
-                            num1.same_numbers_wrap_op(&num2, Add::add, Add::add)
+                            let res = num1.same_numbers_wrap_op(&num2, Add::add, Add::add);
+                            log::debug!("[{scope}] {num1:?} + {num2:?} --> {res}");
+                            res
                         }
                         E::OperatorSubtract { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?;
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Sub;
-                            num1.same_numbers_wrap_op(&num2, Sub::sub, Sub::sub)
+                            let res = num1.same_numbers_wrap_op(&num2, Sub::sub, Sub::sub);
+                            log::debug!("[{scope}] {num1:?} - {num2:?} --> {res}");
+                            res
                         }
                         E::OperatorMultiply { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?;
                             let num2 = self.evaluate_expr(num2)?;
                             use std::ops::Mul;
-                            num1.same_numbers_wrap_op(&num2, Mul::mul, Mul::mul)
+                            let res = num1.same_numbers_wrap_op(&num2, Mul::mul, Mul::mul);
+                            log::debug!("[{scope}] {num1:?} * {num2:?} --> {res}");
+                            res
                         }
                         E::OperatorMod { num1, num2 } => {
                             // TODO: scratch version of mod also works with floats
                             let num1 = self.evaluate_expr(num1)?.as_int();
                             let num2 = self.evaluate_expr(num2)?.as_int();
 
-                            if num2 == 0 {
+                            let res = if num2 == 0 {
                                 V::Float(f64::NAN)
                             } else if num1 == 0 {
                                 V::Int(0)
                             } else {
                                 V::Int(num1 % num2)
-                            }
+                            };
+                            log::debug!("[{scope}] {num1:?} mod {num2:?} --> {res}");
+                            res
                         }
                         E::OperatorDivide { num1, num2 } => {
                             let num1 = self.evaluate_expr(num1)?.as_float();
                             let num2 = self.evaluate_expr(num2)?.as_float();
 
-                            if num1 == 0.0 && num2 == 0.0 {
+                            let res = if num1 == 0.0 && num2 == 0.0 {
                                 V::Float(f64::NAN)
                             } else if num1 > 0.0 && num2 == 0.0 {
                                 V::Float(f64::INFINITY)
@@ -368,12 +384,14 @@ impl Interpreter<Starting> {
                                 V::Float(f64::NEG_INFINITY)
                             } else {
                                 V::Float(num1 / num2)
-                            }
+                            };
+                            log::debug!("[{scope}] {num1:?} / {num2:?} --> {res}");
+                            res
                         }
                         E::OperatorLetterOf { letter, string } => {
                             let letter = self.evaluate_expr(letter)?.as_int();
                             let string = self.evaluate_expr(string)?;
-                            if letter == 0 || letter as usize > string.as_text().len() {
+                            let res = if letter == 0 || letter as usize > string.as_text().len() {
                                 V::Text("".into())
                             } else {
                                 V::Text(
@@ -385,53 +403,91 @@ impl Interpreter<Starting> {
                                         .to_string()
                                         .into(),
                                 )
-                            }
+                            };
+                            log::debug!("[{scope}] letter {letter:?} of text {string:?} --> {res}");
+                            res
                         }
                         E::OperatorRound { num } => {
                             let num = self.evaluate_expr(num)?.as_int();
-                            V::Int(num)
+                            let res = V::Int(num);
+                            log::debug!("[{scope}] round {num:?} --> {res}");
+                            res
                         }
                         E::OperatorLength { string } => {
                             let string = self.evaluate_expr(string)?;
-                            V::int_or_max(string.as_text().len())
+                            let res = V::int_or_max(string.as_text().len());
+                            log::debug!("[{scope}] length of {string:?} --> {res}");
+                            res
                         }
                         E::OperatorJoin { string1, string2 } => {
                             let string1 = self.evaluate_expr(string1)?;
                             let string2 = self.evaluate_expr(string2)?;
-                            V::Text(
+                            let res = V::Text(
                                 (string1.as_text().to_string() + string2.as_text().as_ref()).into(),
-                            )
+                            );
+                            log::debug!("[{scope}] concat {string1:?} and {string2:?} --> {res}");
+                            res
                         }
                         E::DataLengthoflist { list } => {
-                            V::int_or_max(self.state.get_list_elements(list)?.len())
+                            let res = V::int_or_max(self.state.get_list_elements(list)?.len());
+                            log::debug!("[{scope}] length of list {:?} --> {res}", list.name());
+                            res
                         }
                         E::DataItemnumoflist { list, item } => {
                             let item = self.evaluate_expr(item)?;
+                            let name = list.name();
                             let list = self.state.get_list_elements(list)?;
                             let pos = list
                                 .iter()
                                 .find_position(|i| i.scratch_eq(&item))
                                 .map(|(pos, _)| pos + 1)
                                 .unwrap_or(0);
-                            V::int_or_max(pos)
+                            let res = V::int_or_max(pos);
+                            log::debug!(
+                                "[{scope}] position of {item:?} in list {name:?} --> {res}"
+                            );
+                            res
                         }
                         E::DataItemoflist { list, index } => {
                             let index = self.evaluate_expr(index)?.as_int();
+                            let name = list.name();
                             let list = self.state.get_list_elements(list)?;
-                            if index > 0 {
+                            let res = if index > 0 {
                                 list.get((index - 1) as usize)
                                     .cloned()
                                     .unwrap_or(model::SValue::Text("".into()))
                             } else {
                                 model::SValue::Text("".into())
-                            }
+                            };
+
+                            log::debug!("[{scope}] element {index} of list {name} --> {res:?}");
+                            res
                         }
-                        E::SensingAnswer => self.state.read_last_answer()?.clone(),
-                        E::RDataVar { variable } => self.state.get_variable(variable)?,
-                        E::RDataList { list } => self.state.get_list_value(list)?,
+                        E::SensingAnswer => {
+                            let res = self.state.read_last_answer()?.clone();
+                            log::debug!("[{scope}] read last answer --> {res:?}");
+                            res
+                        }
+                        E::RDataVar { variable } => {
+                            let res = self.state.get_variable(variable)?;
+                            log::debug!(
+                                "[{scope}] read variable {:?} --> {res:?}",
+                                variable.name()
+                            );
+                            res
+                        }
+                        E::RDataList { list } => {
+                            let res = self.state.get_list_value(list)?;
+                            log::debug!(
+                                "[{scope}] read textual representation of list {:?} --> {res:?}",
+                                list.name()
+                            );
+                            res
+                        }
                         E::OperatorMathop { operator, num } => {
                             let num = self.evaluate_expr(num)?.as_float();
-                            V::Float(match operator.as_ref() {
+                            let operator_name = operator.as_ref();
+                            let res = V::Float(match operator_name {
                                 "e ^" => num.exp(),
                                 "log" => num.log10(),
                                 "ln" => num.ln(),
@@ -448,14 +504,22 @@ impl Interpreter<Starting> {
                                 other => {
                                     return Err(RunError::UnsupportedMathOperator(other.into()));
                                 }
-                            })
+                            });
+                            log::debug!("[{scope}] ({operator_name} {num}) --> {res:?}");
+                            res
                         }
 
-                        E::ArgumentReporterStringNumber { value } => self
-                            .state
-                            .procedure_arguments_nearest_string_number(value)?,
+                        E::ArgumentReporterStringNumber { value } => {
+                            let res = self
+                                .state
+                                .procedure_arguments_nearest_string_number(value)?;
+                            log::debug!("[{scope}] {value:?} --> {res:?}");
+                            res
+                        }
                         E::ArgumentReporterBoolean { value } => {
-                            self.state.procedure_arguments_nearest_boolean(value)?
+                            let res = self.state.procedure_arguments_nearest_boolean(value)?;
+                            log::debug!("[{scope}] {value:?} --> {res}");
+                            res
                         }
                     })
                 } else {
@@ -473,42 +537,72 @@ impl Interpreter<Starting> {
         use model::CmpBlockKind as C;
         log::trace!("evaluate cmp: {kind:?}");
         if let model::BlockKind::Cmp(kind) = kind {
+            let scope = kind.get_opcode();
             Ok(match kind {
-                C::ArgumentReporterBoolean { value } => self
-                    .state
-                    .procedure_arguments_nearest_boolean(value)?
-                    .as_bool(),
+                C::ArgumentReporterBoolean { value } => {
+                    let res = self
+                        .state
+                        .procedure_arguments_nearest_boolean(value)?
+                        .as_bool();
+
+                    log::debug!("[{scope}] {value:?} --> {res}");
+                    res
+                }
                 C::OperatorOr { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.deref().clone())?;
                     let operand2 = self.evaluate_cmp(operand2.deref().clone())?;
-                    operand1 || operand2
+                    let res = operand1 || operand2;
+                    log::debug!("[{scope}] {operand1} || {operand2} --> {res}");
+                    res
                 }
                 C::OperatorAnd { operand1, operand2 } => {
                     let operand1 = self.evaluate_cmp(operand1.o_id())?;
                     let operand2 = self.evaluate_cmp(operand2.o_id())?;
-                    operand1 && operand2
+                    let res = operand1 && operand2;
+                    log::debug!("[{scope}] {operand1} && {operand2} --> {res}");
+                    res
                 }
-                C::OperatorNot { operand } => self.evaluate_cmp(operand.o_id())?,
-                C::OperatorEquals { operand1, operand2 } => self
-                    .evaluate_expr(operand1)?
-                    .scratch_eq(&self.evaluate_expr(operand2)?),
+                C::OperatorNot { operand } => {
+                    let op = self.evaluate_cmp(operand.o_id())?;
+                    let res = !op;
+                    log::debug!("[{scope}] !{op} --> {res}");
+                    res
+                }
+                C::OperatorEquals { operand1, operand2 } => {
+                    let op1 = self.evaluate_expr(operand1)?;
+                    let op2 = self.evaluate_expr(operand2)?;
+                    let res = op1.scratch_eq(&op2);
+                    log::debug!("[{scope}] {op1} =? {op2} --> {res}");
+                    res
+                }
                 C::OperatorGt { operand1, operand2 } => {
-                    self.evaluate_expr(operand1)?.as_float()
-                        > self.evaluate_expr(operand2)?.as_float()
+                    let op1 = self.evaluate_expr(operand1)?.as_float();
+                    let op2 = self.evaluate_expr(operand2)?.as_float();
+                    let res = op1 > op2;
+                    log::debug!("[{scope}] {op1} > {op2} --> {res}");
+                    res
                 }
                 C::OperatorLt { operand1, operand2 } => {
-                    self.evaluate_expr(operand1)?.as_float()
-                        < self.evaluate_expr(operand2)?.as_float()
+                    let op1 = self.evaluate_expr(operand1)?.as_float();
+                    let op2 = self.evaluate_expr(operand2)?.as_float();
+                    let res = op1 < op2;
+                    log::debug!("[{scope}] {op1} < {op2} --> {res}");
+                    res
                 }
                 C::OperatorContains { string1, string2 } => {
                     let string1 = self.evaluate_expr(string1)?;
                     let string2 = self.evaluate_expr(string2)?;
-                    string1.as_text().contains(string2.as_text().as_ref())
+                    let res = string1.as_text().contains(string2.as_text().as_ref());
+                    log::debug!("[{scope}] is {string2:?} contained in {string1:?} --> {res}");
+                    res
                 }
                 C::DataListcontainsitem { list, item } => {
                     let item = self.evaluate_expr(item)?;
+                    let name = list.name();
                     let list = self.state.get_list_elements(list)?;
-                    list.iter().any(|i| i.scratch_eq(&item))
+                    let res = list.iter().any(|i| i.scratch_eq(&item));
+                    log::debug!("[{scope}] is {item:?} contained in list {name:?} --> {res}");
+                    res
                 }
             })
         } else {
