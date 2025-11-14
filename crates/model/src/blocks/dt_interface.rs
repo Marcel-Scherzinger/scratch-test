@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use crate::interpret_json::FormatError;
 
 #[allow(unused)]
-pub(crate) trait GetOpcodeUnit {
+pub trait GetOpcodeUnit {
     type Opcode;
 
     fn get_opcode(&self) -> Self::Opcode;

@@ -118,6 +118,7 @@ mod reader;
 mod scopes;
 mod scratch_expr;
 
+pub use blocks::GetOpcodeUnit;
 pub use blocks::{
     BlockKind, CmpBlockKind, EventBlockKind, ExprBlockKind, NoopStmtBlockKind, StmtBlockKind,
     UnsupportedBlockKind,
